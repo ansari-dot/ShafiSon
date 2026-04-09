@@ -223,7 +223,7 @@ export default function ProductDetail() {
         {/* -- Main Section -- */}
         <div className="pd-main">
 
-          {/* Left — Images */}
+          {/* Left â€” Images */}
           <div className="pd-gallery">
             {/* Desktop: vertical thumbs on left */}
             <div className="pd-thumbs pd-thumbs-desktop">
@@ -271,7 +271,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Right — Info */}
+          {/* Right â€” Info */}
           <div className="pd-info">
 
             {/* Category + badge */}
@@ -289,7 +289,7 @@ export default function ProductDetail() {
             <div className="pd-rating-row">
               <Stars rating={product.rating || 0} />
               <span className="pd-rating-num">{product.rating || 0}</span>
-              <span className="pd-rating-sep">·</span>
+              <span className="pd-rating-sep">Â·</span>
               <span className="pd-review-count">{product.reviews || 0} reviews</span>
             </div>
 

@@ -1,4 +1,3 @@
-import Hero from "../components/Hero";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { formatPKR } from "../util/formatCurrency";
@@ -102,16 +101,18 @@ export default function Checkout() {
 
   return (
     <main>
-      <Hero title="Checkout" />
-
-      <section className="section-pad">
+      <section className="section-pad checkout-page">
         <div className="container">
-          {error && <div className="alert alert-danger mb-4">{error}</div>}
+          {error && <div className="alert alert-danger mb-4 checkout-alert">{error}</div>}
 
-          <div className="row g-4">
+          <div className="row g-4 align-items-start">
             <div className="col-12 col-lg-6">
-              <h2 className="mb-3 fs-4 fw-semibold text-dark">Billing Details</h2>
-              <div className="border bg-white p-4 rounded-3">
+              <div className="checkout-panel">
+                <div className="checkout-panel-head">
+                  <p className="checkout-kicker">Secure Checkout</p>
+                  <h2 className="checkout-title">Billing Details</h2>
+                  <p className="checkout-sub">Please enter your shipping and contact details.</p>
+                </div>
                 <div className="row g-3">
                   <div className="col-12">
                     <label className="form-label">Country *</label>
@@ -166,54 +167,56 @@ export default function Checkout() {
 
             <div className="col-lg-6">
               <div className="mb-4">
-                <h2 className="mb-3 fs-4 fw-semibold text-dark">Coupon Code</h2>
-                <div className="border bg-white p-4 rounded-3">
+                <div className="checkout-panel">
+                  <h2 className="checkout-title checkout-title-sm">Coupon Code</h2>
                   <label className="form-label">Enter your coupon code if you have one</label>
                   <div className="row g-2">
                     <div className="col-md-8">
                       <input className="form-control" placeholder="Coupon Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
                     </div>
                     <div className="col-md-4">
-                      <button className="btn-dark w-100" type="button">Apply</button>
+                      <button className="btn-dark w-100 checkout-btn-muted" type="button">Apply</button>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h2 className="mb-3 fs-4 fw-semibold text-dark">Your Order</h2>
-                <div className="border bg-white p-4 rounded-3">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th className="text-end">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((row) => (
-                        <tr key={row.id}>
-                          <td>
-                            {row.title} <strong className="mx-2">x</strong> {row.qty}
-                          </td>
-                          <td className="text-end">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td className="fw-semibold text-dark">Cart Subtotal</td>
-                        <td className="text-end text-dark">{formatPKR(subtotal)}</td>
-                      </tr>
-                      <tr>
-                        <td className="fw-semibold text-dark">Order Total</td>
-                        <td className="text-end fw-semibold text-dark">{formatPKR(subtotal)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="checkout-panel checkout-order-panel">
+                  <h2 className="checkout-title checkout-title-sm">Your Order</h2>
 
-                  <Link to="/shop" className="btn btn-outline-dark w-100 mb-3">Back to Shop</Link>
-                  <button className="btn-dark w-100" onClick={handlePay} disabled={loading}>
-                    {loading ? "Redirecting..." : "Proceed to PayFast"}
-                  </button>
+                  <div className="checkout-order-list">
+                    {items.map((row) => (
+                      <div key={row.id} className="checkout-order-row">
+                        <div>
+                          <p className="checkout-order-name">{row.title}</p>
+                          <p className="checkout-order-qty">Qty: {row.qty}</p>
+                        </div>
+                        <p className="checkout-order-price">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</p>
+                      </div>
+                    ))}
+                    {items.length === 0 && (
+                      <div className="checkout-empty">No items in cart yet.</div>
+                    )}
+                  </div>
+
+                  <div className="checkout-totals">
+                    <div className="checkout-total-row">
+                      <span>Cart Subtotal</span>
+                      <strong>{formatPKR(subtotal)}</strong>
+                    </div>
+                    <div className="checkout-total-row checkout-total-row-final">
+                      <span>Order Total</span>
+                      <strong>{formatPKR(subtotal)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="checkout-actions">
+                    <Link to="/shop" className="btn btn-outline-dark w-100">Back to Shop</Link>
+                    <button className="btn-dark w-100 checkout-pay-btn" onClick={handlePay} disabled={loading}>
+                      {loading ? "Redirecting..." : "Proceed to PayFast"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

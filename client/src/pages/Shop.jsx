@@ -141,7 +141,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
           <span className="sp-card-rating-num">{item.rating || 0}</span>
           <span className="sp-card-reviews">({item.reviews || 0} reviews)</span>
         </div>
-        {isList && <p className="sp-card-desc">Handcrafted with premium {item.material?.toLowerCase() || "materials"} � built for comfort and lasting style.</p>}
+        {isList && <p className="sp-card-desc">Handcrafted with premium {item.material?.toLowerCase() || "materials"} â€” built for comfort and lasting style.</p>}
         <div className="sp-card-footer">
           {dealActive ? (
             <div className="sp-card-price">
@@ -165,6 +165,10 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
 /* -- Main Page -- */
 export default function Shop() {
   const location = useLocation();
+  const queryText = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get("q") || "").trim();
+  }, [location.search]);
   const isDealPage = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("deal") === "1";
@@ -206,7 +210,10 @@ export default function Shop() {
           if (!active) return;
           list = Array.isArray(data) ? data : [];
         } else {
-          const data = await apiGet("/api/products");
+          const path = queryText
+            ? `/api/products?search=${encodeURIComponent(queryText)}`
+            : "/api/products";
+          const data = await apiGet(path);
           if (!active) return;
           list = Array.isArray(data) ? data : [];
         }
@@ -230,7 +237,7 @@ export default function Shop() {
 
     loadProducts();
     return () => { active = false; };
-  }, [isDealPage]);
+  }, [isDealPage, queryText]);
 
   const isDealActive = (d) => {
     if (!d) return false;
@@ -403,6 +410,11 @@ export default function Shop() {
 
               <div className="sp-toolbar">
                 <div className="sp-toolbar-left">
+                  {queryText && (
+                    <p className="sp-count mb-1">
+                      Search results for <strong>"{queryText}"</strong>
+                    </p>
+                  )}
                   <p className="sp-count">
                     Showing <strong>{filtered.length}</strong> of <strong>{items.length}</strong> products
                   </p>

@@ -73,7 +73,7 @@ export default function DealBanner() {
               )}
             </h2>
             <p className="mb-4">
-              {deal?.text || "Upgrade your living space with our premium collection. Handcrafted pieces built to last a lifetime — at prices you'll love."}
+              {deal?.text || "Upgrade your living space with our premium collection. Handcrafted pieces built to last a lifetime â€” at prices you'll love."}
             </p>
             <a href="/shop?deal=1" className="btn-accent d-inline-block">
               Grab the Deal

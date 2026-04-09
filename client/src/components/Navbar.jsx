@@ -1,4 +1,4 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { navLinks } from "../data/siteData";
 import { getCartCount } from "../util/cart";
@@ -40,11 +40,19 @@ const CloseIcon = () => (
 );
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchVal, setSearchVal] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q") || "";
+    setSearchVal(q);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -70,6 +78,17 @@ export default function Navbar() {
 
   const handleNavClick = () => setOpen(false);
 
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const q = searchVal.trim();
+    if (!q) {
+      navigate("/shop");
+      return;
+    }
+    navigate(`/shop?q=${encodeURIComponent(q)}`);
+    setOpen(false);
+  };
+
   return (
     <>
       <div className="nb-topbar">
@@ -87,7 +106,7 @@ export default function Navbar() {
       <nav className={`nb-nav ${scrolled ? "nb-scrolled" : ""}`}>
         <div className="container">
           <div className="nb-main-row">
-            <div className="nb-search-slot">
+            <form className="nb-search-slot" onSubmit={submitSearch}>
               <SearchIcon />
               <input
                 type="text"
@@ -96,7 +115,10 @@ export default function Navbar() {
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
               />
-            </div>
+              <button type="submit" className="nb-icon-btn" aria-label="Search">
+                <SearchIcon />
+              </button>
+            </form>
 
             <Link to="/" className="nb-logo nb-logo-center" onClick={handleNavClick}>
               <img src={logo} alt="ShafiSons" className="nb-logo-img" />

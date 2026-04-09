@@ -107,7 +107,7 @@ export default function TrackOrder() {
                 <div>
                   <h3>Tracking Status</h3>
                   <p className="track-status-sub">
-                    {order ? `Order #${order.orderCode} · ${order.customer?.city || ""}` : "Enter your order details"}
+                    {order ? `Order #${order.orderCode} Â· ${order.customer?.city || ""}` : "Enter your order details"}
                   </p>
                 </div>
                 <span className="track-pill">{order?.status || "Pending"}</span>
