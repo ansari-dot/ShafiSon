@@ -1,12 +1,28 @@
 import { useState } from "react";
+import { apiPost } from "../util/api";
 
 export default function Newsletter() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email) setSent(true);
+    if (!name.trim() || !email.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await apiPost("/api/subscribers", { name, email });
+      setSent(true);
+      setName("");
+      setEmail("");
+    } catch (err) {
+      setError(err?.message || "Failed to subscribe");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -35,6 +51,14 @@ export default function Newsletter() {
               ) : (
                 <form className="newsletter-form" onSubmit={handleSubmit}>
                   <input
+                    type="text"
+                    className="form-control newsletter-input"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                  <input
                     type="email"
                     className="form-control newsletter-input"
                     placeholder="Enter your email address"
@@ -42,9 +66,10 @@ export default function Newsletter() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                  <button type="submit" className="btn-brand newsletter-btn">
-                    Subscribe
+                  <button type="submit" className="btn-brand newsletter-btn" disabled={saving}>
+                    {saving ? "Subscribing..." : "Subscribe"}
                   </button>
+                  {error && <p className="mb-0 mt-2 text-danger small">{error}</p>}
                 </form>
               )}
             </div>

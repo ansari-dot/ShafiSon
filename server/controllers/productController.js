@@ -4,6 +4,36 @@ function isValidObjectId(id) {
   return id && id.match(/^[0-9a-fA-F]{24}$/);
 }
 
+function normalizeImageList(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (let i = 0; i < list.length; i += 1) {
+    const cur = String(list[i] || "").trim();
+    if (!cur) continue;
+
+    // Repair broken split of data URLs like:
+    // ["data:image/webp;base64", "AAAA...."]
+    if (/^data:image\/[a-zA-Z0-9+.-]+;base64$/i.test(cur)) {
+      const next = String(list[i + 1] || "").trim();
+      if (/^[A-Za-z0-9+/=]+$/.test(next)) {
+        out.push(`${cur},${next}`);
+        i += 1;
+        continue;
+      }
+    }
+
+    out.push(cur);
+  }
+  return out;
+}
+
+function normalizeProductDoc(product) {
+  if (!product || typeof product !== "object") return product;
+  const imgs = normalizeImageList(product.imgs);
+  const img = String(product.img || "").trim() || imgs[0] || "";
+  return { ...product, img, imgs };
+}
+
 export async function getProducts(req, res) {
   try {
     const { search, ids } = req.query;
@@ -18,7 +48,7 @@ export async function getProducts(req, res) {
       ? { title: { $regex: String(search).trim(), $options: "i" } }
       : {};
     const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
-    return res.json(products);
+    return res.json(products.map(normalizeProductDoc));
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch products" });
   }
@@ -31,7 +61,7 @@ export async function getProductById(req, res) {
   try {
     const product = await Product.findById(id).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.json(product);
+    return res.json(normalizeProductDoc(product));
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch product" });
   }
@@ -40,7 +70,7 @@ export async function getProductById(req, res) {
 export async function createProduct(req, res) {
   try {
     const product = await Product.create(req.body);
-    return res.status(201).json(product);
+    return res.status(201).json(normalizeProductDoc(product.toObject()));
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }
@@ -56,7 +86,7 @@ export async function updateProduct(req, res) {
       runValidators: true,
     }).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.json(product);
+    return res.json(normalizeProductDoc(product));
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }

@@ -60,6 +60,22 @@ const emptyForm = {
 
 type FormState = typeof emptyForm;
 
+function parseImageListInput(input: string): string[] {
+  const text = String(input || '');
+  if (!text.trim()) return [];
+
+  // Keep full data URLs intact (they include one comma after "base64,").
+  const dataUrlRegex = /data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/g;
+  const dataUrls = text.match(dataUrlRegex) || [];
+  const rest = text.replace(dataUrlRegex, ' ');
+  const urls = rest
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  return [...urls, ...dataUrls];
+}
+
 export default function Products() {
   const [items, setItems] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -114,7 +130,7 @@ export default function Products() {
       category: p.category || '',
       material: p.material || '',
       img: p.img || '',
-      imgs: (p.imgs || []).join(', '),
+      imgs: (p.imgs || []).join('\n'),
       rating: String(p.rating ?? ''),
       reviews: String(p.reviews ?? ''),
       badge: p.badge || '',
@@ -140,6 +156,60 @@ export default function Products() {
     setForm((f) => ({ ...f, [key]: val }));
   };
 
+  const compressImageFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const src = typeof reader.result === 'string' ? reader.result : '';
+        if (!src) return reject(new Error('Invalid image file'));
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 1200;
+          const maxH = 1200;
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Failed to process image'));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = src;
+      };
+      reader.onerror = () => reject(new Error('Failed to read image'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleMainImageUpload = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      onChange('img', dataUrl);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to process image';
+      setError(message);
+    }
+  };
+
+  const handleGalleryUpload = async (fileList?: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    try {
+      const uploaded = await Promise.all(Array.from(fileList).map((f) => compressImageFile(f)));
+      setForm((prev) => {
+        const existing = parseImageListInput(prev.imgs);
+        return { ...prev, imgs: [...existing, ...uploaded].join('\n') };
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to process gallery images';
+      setError(message);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -152,7 +222,7 @@ export default function Products() {
       category: form.category.trim(),
       material: form.material.trim(),
       img: form.img.trim(),
-      imgs: form.imgs ? form.imgs.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      imgs: parseImageListInput(form.imgs),
       rating: form.rating ? Number(form.rating) : 0,
       reviews: form.reviews ? Number(form.reviews) : 0,
       badge: form.badge ? form.badge.trim() : null,
@@ -332,10 +402,25 @@ export default function Products() {
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Main Image URL</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.img} onChange={(e) => onChange('img', e.target.value)} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-xs"
+                  onChange={(e) => handleMainImageUpload(e.target.files?.[0] || null)}
+                />
+                <div className="text-[11px] text-slate-400 mt-1">Use URL or upload file (auto-compressed)</div>
               </div>
               <div className="col-span-1">
-                <label className="text-xs font-semibold text-slate-500">Gallery URLs (comma separated)</label>
+                <label className="text-xs font-semibold text-slate-500">Gallery URLs (one per line or comma separated)</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.imgs} onChange={(e) => onChange('imgs', e.target.value)} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-xs"
+                  onChange={(e) => handleGalleryUpload(e.target.files)}
+                />
+                <div className="text-[11px] text-slate-400 mt-1">Use URLs or upload multiple files (upload format stays valid)</div>
               </div>
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Badge</label>

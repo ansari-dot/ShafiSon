@@ -1,15 +1,8 @@
 ﻿
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { FileText, Edit, Trash2, Eye, Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame } from 'lucide-react';
+import { Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame, Users } from 'lucide-react';
 import { apiGet, apiPut } from '@/src/lib/api';
-
-const PAGES = [
-  { id: 1, title: 'Homepage', lastModified: '2 hours ago', status: 'Published' },
-  { id: 2, title: 'About Us', lastModified: '1 day ago', status: 'Published' },
-  { id: 3, title: 'Shipping Policy', lastModified: '3 days ago', status: 'Draft' },
-  { id: 4, title: 'Terms & Conditions', lastModified: '1 week ago', status: 'Published' },
-];
 
 type Product = {
   _id: string;
@@ -59,12 +52,27 @@ type DealSection = {
   endsAt?: string | null;
 };
 
+type TeamMember = {
+  name: string;
+  role: string;
+  img: string;
+  active: boolean;
+};
+
+type AboutTeamSection = {
+  title: string;
+  heading: string;
+  text: string;
+  members: TeamMember[];
+};
+
 export default function Content() {
   const [open, setOpen] = useState(false);
   const [openCompare, setOpenCompare] = useState(false);
   const [openPopular, setOpenPopular] = useState(false);
   const [openCats, setOpenCats] = useState(false);
   const [openDeal, setOpenDeal] = useState(false);
+  const [openTeam, setOpenTeam] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -113,6 +121,18 @@ export default function Content() {
     endsAt: null,
   });
 
+  const [teamForm, setTeamForm] = useState<AboutTeamSection>({
+    title: 'The People',
+    heading: 'Meet Our Team',
+    text: 'The talented individuals behind every Shafi Sons piece.',
+    members: [
+      { name: 'Lawson Arnold', role: 'CEO, Founder, Atty.', img: '/images/person_1.jpg', active: true },
+      { name: 'Jeremy Walker', role: 'CEO, Founder, Atty.', img: '/images/person_2.jpg', active: true },
+      { name: 'Patrik White', role: 'CEO, Founder, Atty.', img: '/images/person_3.jpg', active: true },
+      { name: 'Kathryn Ryan', role: 'CEO, Founder, Atty.', img: '/images/person_4.jpg', active: true },
+    ],
+  });
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -121,10 +141,11 @@ export default function Content() {
       apiGet<PopularPicks | null>('/api/popular-picks'),
       apiGet<HomeCategories | null>('/api/home-categories'),
       apiGet<DealSection | null>('/api/deal-section'),
+      apiGet<AboutTeamSection | null>('/api/about-team'),
       apiGet<Product[]>('/api/products'),
       apiGet<Category[]>('/api/categories')
     ])
-      .then(([doc, compareDoc, popularDoc, catDoc, dealDoc, list, catList]) => {
+      .then(([doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList]) => {
         if (!active) return;
         if (doc) {
           setForm({
@@ -167,6 +188,14 @@ export default function Content() {
             discountType: dealDoc.discountType || 'percent',
             discountValue: typeof dealDoc.discountValue === 'number' ? dealDoc.discountValue : 0,
             endsAt: dealDoc.endsAt || null,
+          });
+        }
+        if (teamDoc) {
+          setTeamForm({
+            title: teamDoc.title || 'The People',
+            heading: teamDoc.heading || 'Meet Our Team',
+            text: teamDoc.text || '',
+            members: Array.isArray(teamDoc.members) ? teamDoc.members : [],
           });
         }
         setProducts(Array.isArray(list) ? list : []);
@@ -319,6 +348,20 @@ export default function Content() {
     }
   };
 
+  const saveTeam = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      await apiPut('/api/about-team', teamForm);
+      setOpenTeam(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save team section';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const toLocalInputValue = (value?: string | null) => {
     if (!value) return '';
     const d = new Date(value);
@@ -339,10 +382,62 @@ export default function Content() {
     }
     setDealForm((f) => ({ ...f, endsAt: d.toISOString() }));
   };
+
+  const updateTeamMember = (index: number, patch: Partial<TeamMember>) => {
+    setTeamForm((f) => ({
+      ...f,
+      members: f.members.map((m, i) => (i === index ? { ...m, ...patch } : m)),
+    }));
+  };
+
+  const addTeamMember = () => {
+    setTeamForm((f) => ({
+      ...f,
+      members: [...f.members, { name: '', role: '', img: '', active: true }],
+    }));
+  };
+
+  const removeTeamMember = (index: number) => {
+    setTeamForm((f) => ({
+      ...f,
+      members: f.members.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleTeamImageUpload = (index: number, file?: File | null) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const source = typeof reader.result === 'string' ? reader.result : '';
+      if (!source) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 800;
+        const maxH = 800;
+        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+        updateTeamMember(index, { img: compressed });
+      };
+      img.src = source;
+    };
+    reader.readAsDataURL(file);
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="text-2xl font-bold text-slate-900"
@@ -409,44 +504,17 @@ export default function Content() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {PAGES.map((page) => (
-          <motion.div 
-            key={page.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white border border-black/10 rounded-lg p-4 flex items-center justify-between shadow-sm hover:border-blue-500/30 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-md flex items-center justify-center">
-                <FileText size={20} />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900">{page.title}</h3>
-                <span className="text-xs text-slate-400">Modified {page.lastModified}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${
-                page.status === 'Published' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
-              }`}>
-                {page.status}
-              </span>
-              <div className="flex items-center gap-2">
-                <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                  <Eye size={18} />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                  <Edit size={18} />
-                </button>
-                <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+      <div className="mb-6 bg-white border border-black/10 rounded-lg shadow-sm p-5 flex items-center justify-between">
+        <div>
+          <h2 className="font-bold text-slate-900">About Page: Team Section</h2>
+          <p className="text-sm text-slate-500">Manage team members shown in the About page.</p>
+        </div>
+        <button onClick={() => setOpenTeam(true)} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 font-medium shadow-sm hover:bg-blue-700 transition-colors">
+          <Users size={16} />
+          Edit Team
+        </button>
       </div>
+
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col">
@@ -790,6 +858,106 @@ export default function Content() {
               <div className="col-span-2 flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setOpenDeal(false)} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
                 <button type="button" disabled={saving} onClick={saveDeal} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <h3 className="text-lg font-bold text-slate-900">Edit About Team Section</h3>
+              <button onClick={() => setOpenTeam(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Section Label</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={teamForm.title} onChange={(e) => setTeamForm({ ...teamForm, title: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Heading</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={teamForm.heading} onChange={(e) => setTeamForm({ ...teamForm, heading: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Description</label>
+                <textarea className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" rows={3} value={teamForm.text} onChange={(e) => setTeamForm({ ...teamForm, text: e.target.value })} />
+              </div>
+
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-500">Team Members</label>
+                  <button type="button" onClick={addTeamMember} className="px-3 py-1.5 text-xs rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50">
+                    Add Member
+                  </button>
+                </div>
+                <div className="border border-slate-200 rounded-md p-3 space-y-3">
+                  {teamForm.members.map((m, i) => (
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border border-slate-100 rounded-md p-3">
+                      <input
+                        className="md:col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                        placeholder="Name"
+                        value={m.name}
+                        onChange={(e) => updateTeamMember(i, { name: e.target.value })}
+                      />
+                      <input
+                        className="md:col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                        placeholder="Role"
+                        value={m.role}
+                        onChange={(e) => updateTeamMember(i, { role: e.target.value })}
+                      />
+                      <input
+                        className="md:col-span-4 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                        placeholder="/images/person_1.jpg"
+                        value={m.img}
+                        onChange={(e) => updateTeamMember(i, { img: e.target.value })}
+                      />
+                      <div className="md:col-span-4">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs"
+                          onChange={(e) => handleTeamImageUpload(i, e.target.files?.[0] || null)}
+                        />
+                        <div className="text-[11px] text-slate-400 mt-1">Upload image file (auto-compressed) or use image URL above</div>
+                      </div>
+                      <div className="md:col-span-1">
+                        <img
+                          src={m.img || '/images/person_1.jpg'}
+                          alt={m.name || 'Team member'}
+                          className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                        />
+                      </div>
+                      <label className="md:col-span-1 flex items-center gap-2 text-xs text-slate-600">
+                        <input
+                          type="checkbox"
+                          checked={m.active}
+                          onChange={(e) => updateTeamMember(i, { active: e.target.checked })}
+                        />
+                        Active
+                      </label>
+                      <button type="button" onClick={() => removeTeamMember(i)} className="md:col-span-1 px-2 py-2 text-xs rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {teamForm.members.length === 0 && (
+                    <div className="text-sm text-slate-400">No members added yet.</div>
+                  )}
+                </div>
+              </div>
+
+              {error && <div className="col-span-2 text-sm text-red-600">{error}</div>}
+
+              <div className="col-span-2 flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setOpenTeam(false)} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
+                <button type="button" disabled={saving} onClick={saveTeam} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
                   <Save size={16} />
                   {saving ? 'Saving...' : 'Save'}
                 </button>

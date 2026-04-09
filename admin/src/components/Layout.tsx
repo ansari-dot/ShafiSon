@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   LayoutDashboard, 
   Package, 
@@ -13,10 +13,14 @@ import {
   Settings, 
   Search, 
   Bell, 
-  Box
+  Box,
+  AlertCircle,
+  MessageCircle,
+  Mail
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/src/lib/utils';
+import { apiGet } from '@/src/lib/api';
 
 interface NavItemProps {
   to: string;
@@ -40,6 +44,33 @@ const NavItem = ({ to, icon: Icon, label }: NavItemProps) => (
 );
 
 export default function Layout() {
+  const [openNotifications, setOpenNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      apiGet<any>('/api/dashboard')
+        .then((data) => setNotifications(Array.isArray(data?.activityFeed) ? data.activityFeed : []))
+        .catch(() => setNotifications([]));
+    };
+
+    loadNotifications();
+    const timer = setInterval(loadNotifications, 20000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full bg-[#f7f8fa]">
       {/* Sidebar */}
@@ -102,11 +133,58 @@ export default function Layout() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-5">
-            <button className="relative w-9 h-9 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+          <div className="flex items-center gap-5" ref={dropdownRef}>
+            <button
+              className="relative w-9 h-9 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+              onClick={() => setOpenNotifications((v) => !v)}
+              aria-label="Toggle notifications"
+            >
               <Bell size={20} />
-              <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full border-2 border-white text-[10px] leading-[14px] text-white font-bold flex items-center justify-center">
+                  {notifications.length > 9 ? '9+' : notifications.length}
+                </span>
+              )}
             </button>
+            {openNotifications && (
+              <div className="absolute top-14 right-8 w-[360px] max-h-[420px] overflow-y-auto bg-white border border-black/10 rounded-lg shadow-lg z-40">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
+                  <span className="text-xs text-slate-500">{notifications.length} items</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {notifications.length === 0 && (
+                    <div className="px-4 py-6 text-sm text-slate-400 text-center">No new notifications</div>
+                  )}
+                  {notifications.map((item, idx) => (
+                    <div key={`${item.type}-${idx}`} className="px-4 py-3 hover:bg-slate-50">
+                      <div className="flex gap-3">
+                        <div
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                            item.type === "alert" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                          )}
+                        >
+                          {item.type === "alert" ? (
+                            <AlertCircle size={16} />
+                          ) : item.type === "contact" ? (
+                            <MessageCircle size={16} />
+                          ) : item.type === "subscriber" ? (
+                            <Mail size={16} />
+                          ) : (
+                            <ShoppingCart size={16} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-slate-700 leading-snug">{item.text}</p>
+                          <p className="text-xs text-slate-400 mt-1">{item.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
@@ -118,3 +196,4 @@ export default function Layout() {
     </div>
   );
 }
+

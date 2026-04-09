@@ -4,6 +4,8 @@ import ShopHero from "../components/ShopHero";
 import { formatPKR } from "../util/formatCurrency";
 import { apiGet } from "../util/api";
 import { addToCart } from "../util/cart";
+import { getWishlist, toggleWishlist } from "../wishlist";
+import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
 
 const SORT_OPTIONS = [
   { label: "Featured",          value: "featured"   },
@@ -93,8 +95,12 @@ function FilterGroup({ title, children, defaultOpen = true }) {
 function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealActive }) {
   const isList = view === "list";
   const dealActive = item?.isDeal && isDealActive(deal);
+  const outOfStock = isOutOfStock(item);
+  const lowStock = isLowStock(item);
+  const quantity = getQuantity(item);
   const dealPrice = dealActive ? getDealPrice(item.price, deal) : null;
   const handleAdd = () => {
+    if (outOfStock) return;
     const unitPrice = dealActive ? dealPrice : item.price;
     addToCart({
       id: item._id,
@@ -112,15 +118,17 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
           <img src={item.img} alt={item.title} className="sp-card-img" />
         </Link>
         {item.badge && <span className={`sp-badge sp-badge-${item.badge.toLowerCase()}`}>{item.badge}</span>}
+        {outOfStock && <span className="sp-stock-badge sp-stock-badge-out">Out of Stock</span>}
+        {lowStock && <span className="sp-stock-badge sp-stock-badge-low">Low Stock ({quantity} left)</span>}
         <div className="sp-card-actions">
-          <button className="sp-action-btn" onClick={() => onWish(item._id)} aria-label="Wishlist"
+          <button className="sp-action-btn" onClick={() => onWish(item)} aria-label="Wishlist"
             style={{ color: wished ? "#ef4444" : undefined }}>
             <HeartIcon active={wished} />
           </button>
           <button className="sp-action-btn" aria-label="Quick view"><EyeIcon /></button>
         </div>
-        <button className="sp-add-cart-btn" onClick={handleAdd}>
-          <CartIcon /> Add to Cart
+        <button className={`sp-add-cart-btn ${outOfStock ? "disabled" : ""}`} onClick={handleAdd} disabled={outOfStock}>
+          <CartIcon /> {outOfStock ? "Out of Stock" : "Add to Cart"}
         </button>
       </div>
       <div className="sp-card-body">
@@ -146,7 +154,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
             <strong className="sp-card-price">{formatPKR(item.price)}</strong>
           )}
           {isList && (
-            <button className="sp-list-cart-btn" onClick={handleAdd}><CartIcon /> Add to Cart</button>
+            <button className={`sp-list-cart-btn ${outOfStock ? "disabled" : ""}`} onClick={handleAdd} disabled={outOfStock}><CartIcon /> {outOfStock ? "Out of Stock" : "Add to Cart"}</button>
           )}
         </div>
       </div>
@@ -174,7 +182,7 @@ export default function Shop() {
   const [minRating,    setMinRating]    = useState(0);
   const [sort,         setSort]         = useState("featured");
   const [view,         setView]         = useState("grid");
-  const [wished,       setWished]       = useState([]);
+  const [wished,       setWished]       = useState(() => getWishlist().map((item) => item.id));
   const [drawerOpen,   setDrawerOpen]   = useState(false);
 
   useEffect(() => {
@@ -251,8 +259,22 @@ export default function Shop() {
     return ["All", ...Array.from(set)];
   }, [items]);
 
-  const toggleWish = (id) =>
-    setWished(w => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
+  useEffect(() => {
+    const updateWished = () => setWished(getWishlist().map((item) => item.id));
+    window.addEventListener("wishlist:updated", updateWished);
+    return () => window.removeEventListener("wishlist:updated", updateWished);
+  }, []);
+
+  const toggleWish = (item) => {
+    toggleWishlist({
+      id: item._id,
+      title: item.title,
+      img: item.img,
+      price: item.price,
+      category: item.category,
+    });
+    setWished(getWishlist().map((entry) => entry.id));
+  };
 
   const filtered = useMemo(() => {
     let list = [...items];
@@ -445,6 +467,11 @@ export default function Shop() {
     </main>
   );
 }
+
+
+
+
+
 
 
 

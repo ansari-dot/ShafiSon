@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   AlertCircle,
   MessageCircle,
+  Mail,
   ShoppingCart,
   Tag
 } from 'lucide-react';
@@ -234,7 +235,7 @@ export default function Dashboard() {
             {activity.map((a, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", a.type === 'alert' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600')}>
-                  {a.type === 'alert' ? <AlertCircle size={18} /> : <ShoppingCart size={18} />}
+                  {a.type === 'alert' ? (<AlertCircle size={18} />) : a.type === 'contact' ? (<MessageCircle size={18} />) : a.type === 'subscriber' ? (<Mail size={18} />) : (<ShoppingCart size={18} />)}
                 </div>
                 <div className="flex flex-col">
                   <p className="text-sm text-slate-700 leading-relaxed">{a.text}</p>
@@ -290,3 +291,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+

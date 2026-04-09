@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 import { addToCart } from "../util/cart";
+import { hasInWishlist, toggleWishlist } from "../wishlist";
+import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
 
 /* -- Icons -- */
 const StarIcon = ({ filled }) => (
@@ -111,6 +113,7 @@ export default function ProductDetail() {
       .then(([p, list, dealDoc]) => {
         if (!active) return;
         setProduct(p);
+        setWished(hasInWishlist(p?._id));
         setAllProducts(Array.isArray(list) ? list : []);
         setDeal(dealDoc || null);
         setError("");
@@ -125,6 +128,18 @@ export default function ProductDetail() {
       });
     return () => { active = false; };
   }, [id]);
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    const activeWish = toggleWishlist({
+      id: product._id,
+      title: product.title,
+      img: product.img,
+      price: product.price,
+      category: product.category,
+    });
+    setWished(activeWish);
+  };
 
   if (loading) {
     return (
@@ -146,6 +161,7 @@ export default function ProductDetail() {
 
   const images = product.imgs && product.imgs.length ? product.imgs : (product.img ? [product.img] : []);
   const related = allProducts.filter(p => p.category === product.category && p._id !== product._id).slice(0, 4);
+  const browseMore = allProducts.filter((p) => p._id !== product._id).slice(0, 3);
 
   const isDealActive = (d) => {
     if (!d) return false;
@@ -165,9 +181,13 @@ export default function ProductDetail() {
   };
 
   const dealActive = product?.isDeal && isDealActive(deal);
+  const outOfStock = isOutOfStock(product);
+  const lowStock = isLowStock(product);
+  const stockQty = getQuantity(product);
   const dealPrice = dealActive ? getDealPrice(product.price, deal) : null;
 
   const handleAddToCart = () => {
+    if (outOfStock) return;
     setAdded(true);
     const unitPrice = dealActive ? dealPrice : product.price;
     addToCart({
@@ -229,7 +249,7 @@ export default function ProductDetail() {
                 )}
                 <button
                   className={`pd-wish-float ${wished ? "active" : ""}`}
-                  onClick={() => setWished(w => !w)}
+                  onClick={handleToggleWishlist}
                   aria-label="Wishlist"
                 >
                   <HeartIcon active={wished} />
@@ -257,7 +277,8 @@ export default function ProductDetail() {
             {/* Category + badge */}
             <div className="pd-info-top">
               <span className="pd-cat-label">{product.category}</span>
-              {!product.inStock && <span className="pd-out-badge">Out of Stock</span>}
+              {outOfStock && <span className="pd-out-badge">Out of Stock</span>}
+              {lowStock && <span className="pd-low-badge">Low Stock ({stockQty} left)</span>}
               {product.color && <span className="pd-color-text">Color: {product.color}</span>}
               {dealActive && <span className="pd-deal-badge">Deal</span>}
             </div>
@@ -318,13 +339,13 @@ export default function ProductDetail() {
                 <button className="pd-qty-btn" onClick={() => setQty(q => q + 1)} aria-label="Increase"><PlusIcon /></button>
               </div>
               <button
-                className={`pd-add-btn ${added ? "added" : ""} ${!product.inStock ? "disabled" : ""}`}
+                className={`pd-add-btn ${added ? "added" : ""} ${outOfStock ? "disabled" : ""}`}
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={outOfStock}
               >
-                {added ? <><CheckIcon /> Added!</> : <><CartIcon /> Add to Cart</>}
+                {added ? <><CheckIcon /> Added!</> : <><CartIcon /> {outOfStock ? "Out of Stock" : "Add to Cart"}</>}
               </button>
-              <button className={`pd-wish-btn ${wished ? "active" : ""}`} onClick={() => setWished(w => !w)} aria-label="Wishlist">
+              <button className={`pd-wish-btn ${wished ? "active" : ""}`} onClick={handleToggleWishlist} aria-label="Wishlist">
                 <HeartIcon active={wished} />
               </button>
               <button className="pd-share-btn" aria-label="Share"><ShareIcon /></button>
@@ -462,7 +483,30 @@ export default function ProductDetail() {
           </div>
         )}
 
+        {browseMore.length > 0 && (
+          <section className="pd-browse">
+            <div className="pd-browse-head">
+              <h3 className="pd-browse-title">Browse More</h3>
+              <Link to="/shop" className="pd-browse-link">See All Products</Link>
+            </div>
+            <div className="pd-browse-grid">
+              {browseMore.map((item) => (
+                <Link to={`/shop/${item._id}`} key={item._id} className="pd-browse-card">
+                  <div className="pd-browse-img-wrap">
+                    <img src={item.img} alt={item.title} className="pd-browse-img" />
+                  </div>
+                  <p className="pd-browse-name">{item.title}</p>
+                  <strong className="pd-browse-price">{formatPKR(item.price)}</strong>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
 }
+
+
+
+

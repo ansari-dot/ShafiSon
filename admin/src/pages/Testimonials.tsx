@@ -88,6 +88,51 @@ export default function Testimonials() {
     setForm((f) => ({ ...f, [key]: val }));
   };
 
+  const compressImageFile = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read image file'));
+      reader.onload = () => {
+        const source = typeof reader.result === 'string' ? reader.result : '';
+        if (!source) {
+          reject(new Error('Invalid image source'));
+          return;
+        }
+        const img = new Image();
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.onload = () => {
+          const maxW = 1000;
+          const maxH = 1000;
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to process image'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = source;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleImageUpload = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file);
+      onChange('img', compressed);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to process image';
+      setError(message);
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -242,6 +287,16 @@ export default function Testimonials() {
               <div>
                 <label className="text-xs font-semibold text-slate-500">Image URL</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.img} onChange={(e) => onChange('img', e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500">Upload Image File</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                  onChange={(e) => handleImageUpload(e.target.files?.[0] || null)}
+                />
+                <div className="text-[11px] text-slate-400 mt-1">Use image URL above or upload file here.</div>
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={form.active} onChange={(e) => onChange('active', e.target.checked)} />

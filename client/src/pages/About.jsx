@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import TestimonialSlider from "../components/TestimonialSlider";
 import { team, stats } from "../data/siteData";
+import { apiGet } from "../util/api";
 
 /* ── Icons ── */
 const ChevronIcon = () => (
@@ -74,6 +76,28 @@ const timeline = [
 ];
 
 export default function About() {
+  const [teamSection, setTeamSection] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    apiGet("/api/about-team")
+      .then((doc) => {
+        if (!active) return;
+        setTeamSection(doc || null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTeamSection(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeTeam = Array.isArray(teamSection?.members)
+    ? teamSection.members.filter((m) => m?.active !== false)
+    : team;
+
   return (
     <main className="au-page">
 
@@ -227,13 +251,13 @@ export default function About() {
       <section className="au-team-section section-pad">
         <div className="container">
           <div className="text-center mb-5">
-            <span className="section-label">The People</span>
-            <h2 className="fs-2 fw-bold text-dark mt-2">Meet Our Team</h2>
-            <p className="mt-2 hiw-subtitle">The talented individuals behind every Shafi Sons piece.</p>
+            <span className="section-label">{teamSection?.title || "The People"}</span>
+            <h2 className="fs-2 fw-bold text-dark mt-2">{teamSection?.heading || "Meet Our Team"}</h2>
+            <p className="mt-2 hiw-subtitle">{teamSection?.text || "The talented individuals behind every Shafi Sons piece."}</p>
           </div>
           <div className="au-team-grid">
-            {team.map((person) => (
-              <div className="au-team-card" key={person.id}>
+            {activeTeam.map((person, idx) => (
+              <div className="au-team-card" key={person.id || `${person.name}-${idx}`}>
                 <div className="au-team-img-wrap">
                   <img src={person.img} alt={person.name} className="au-team-img" />
                   <div className="au-team-socials">

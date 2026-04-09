@@ -1,35 +1,47 @@
 import Order from "../models/Order.js";
 
-function monthKey(date) {
-  return date.toLocaleDateString("en-US", { month: "short" });
+function dayLabel(date) {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export async function getReports(req, res) {
   try {
+    const allowedDays = new Set([7, 30, 90, 180, 365]);
+    const requested = Number(req.query.days || 180);
+    const days = allowedDays.has(requested) ? requested : 180;
+
     const now = new Date();
-    const months = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({
-        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-        name: monthKey(d),
-        start: d,
-        end: new Date(d.getFullYear(), d.getMonth() + 1, 1),
-      });
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (days - 1));
+
+    const paidOrders = await Order.find({
+      paymentStatus: "Paid",
+      createdAt: { $gte: start, $lte: now },
+    }).lean();
+
+    const map = new Map();
+    for (let i = 0; i < days; i += 1) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      map.set(key, { date: key, name: dayLabel(d), sales: 0, orders: 0 });
     }
 
-    const paidOrders = await Order.find({ paymentStatus: "Paid" }).lean();
-
-    const data = months.map((m) => {
-      const inMonth = paidOrders.filter((o) => {
-        const t = new Date(o.createdAt).getTime();
-        return t >= m.start.getTime() && t < m.end.getTime();
-      });
-      const sales = inMonth.reduce((sum, o) => sum + (o.total || 0), 0);
-      return { name: m.name, sales: Math.round(sales), orders: inMonth.length };
+    paidOrders.forEach((o) => {
+      const key = new Date(o.createdAt).toISOString().slice(0, 10);
+      const row = map.get(key);
+      if (!row) return;
+      row.sales += Number(o.total || 0);
+      row.orders += 1;
     });
 
-    return res.json({ data });
+    const data = Array.from(map.values()).map((x) => ({
+      ...x,
+      sales: Math.round(x.sales),
+    }));
+
+    return res.json({ days, data });
   } catch (err) {
     return res.status(500).json({ message: "Failed to load reports" });
   }

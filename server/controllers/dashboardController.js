@@ -1,5 +1,7 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import ContactLead from "../models/ContactLead.js";
+import Subscriber from "../models/Subscriber.js";
 
 function startOfDay(d) {
   const x = new Date(d);
@@ -59,6 +61,14 @@ export async function getDashboard(req, res) {
       .sort({ createdAt: -1 })
       .limit(6)
       .lean();
+    const recentContacts = await ContactLead.find()
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean();
+    const recentSubscribers = await Subscriber.find()
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .lean();
 
     const salesData = Array.from({ length: 7 }).map((_, i) => {
       const day = daysAgo(6 - i);
@@ -71,21 +81,43 @@ export async function getDashboard(req, res) {
       return { name, sales: Math.round(total) };
     });
 
-    const activityFeed = [];
+    const activityEvents = [];
     recentOrders.slice(0, 3).forEach((o) => {
-      activityFeed.push({
+      activityEvents.push({
         type: "order",
         text: `New order ${o.orderCode} placed by ${o.customer?.firstName || "Customer"}`,
         time: formatRelative(o.createdAt),
+        _ts: new Date(o.createdAt).getTime(),
+      });
+    });
+    recentContacts.slice(0, 3).forEach((c) => {
+      activityEvents.push({
+        type: "contact",
+        text: `New contact message from ${c.firstName || "Customer"} ${c.lastName || ""}`.trim(),
+        time: formatRelative(c.createdAt),
+        _ts: new Date(c.createdAt).getTime(),
+      });
+    });
+    recentSubscribers.slice(0, 3).forEach((s) => {
+      activityEvents.push({
+        type: "subscriber",
+        text: `New newsletter subscriber: ${s.name || "Customer"} (${s.email || ""})`.trim(),
+        time: formatRelative(s.createdAt),
+        _ts: new Date(s.createdAt).getTime(),
       });
     });
     if (lowStockItems.length > 0) {
-      activityFeed.push({
+      activityEvents.push({
         type: "alert",
         text: `Low stock alert: ${lowStockItems[0].title} (${lowStockItems[0].quantity || 0} left).`,
         time: "Just now",
+        _ts: Date.now(),
       });
     }
+    const activityFeed = activityEvents
+      .sort((a, b) => b._ts - a._ts)
+      .slice(0, 6)
+      .map(({ _ts, ...rest }) => rest);
 
     return res.json({
       metrics: {

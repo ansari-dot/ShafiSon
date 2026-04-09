@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { apiPost } from "../util/api";
 
 /* ── Icons ── */
 const ChevronIcon = () => (
@@ -80,6 +81,8 @@ export default function Contact() {
   const [form, setForm]   = useState({ firstName: "", lastName: "", email: "", phone: "", topic: "", message: "" });
   const [sent, setSent]   = useState(false);
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const validate = () => {
     const e = {};
@@ -91,11 +94,21 @@ export default function Contact() {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const e2 = validate();
     if (Object.keys(e2).length) { setErrors(e2); return; }
-    setSent(true);
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await apiPost("/api/contacts", form);
+      setSent(true);
+      setForm({ firstName: "", lastName: "", email: "", phone: "", topic: "", message: "" });
+    } catch (err) {
+      setSubmitError(err?.message || "Failed to send message. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (field, val) => {
@@ -171,7 +184,7 @@ export default function Contact() {
                 <p className="ct-success-desc">
                   Thanks for reaching out. We'll get back to you within 24 hours.
                 </p>
-                <button className="ct-success-btn" onClick={() => { setSent(false); setForm({ firstName: "", lastName: "", email: "", phone: "", topic: "", message: "" }); }}>
+                <button className="ct-success-btn" onClick={() => { setSent(false); }}>
                   Send Another Message
                 </button>
               </div>
@@ -262,9 +275,10 @@ export default function Contact() {
                     {errors.message && <span className="ct-error-msg">{errors.message}</span>}
                   </div>
 
-                  <button type="submit" className="ct-submit-btn">
+                  {submitError && <span className="ct-error-msg">{submitError}</span>}
+                  <button type="submit" className="ct-submit-btn" disabled={submitting}>
                     <SendIcon />
-                    Send Message
+                    {submitting ? "Sending..." : "Send Message"}
                   </button>
                 </div>
               </form>

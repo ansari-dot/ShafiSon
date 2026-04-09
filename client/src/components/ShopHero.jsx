@@ -3,9 +3,7 @@ export default function ShopHero() {
     <section className="shop-hero">
       <div className="container">
         <div className="shop-hero-inner">
-
           <div className="shop-hero-left">
-            {/* Breadcrumb */}
             <nav className="shop-breadcrumb" aria-label="breadcrumb">
               <a href="/">Home</a>
               <span className="shop-breadcrumb-sep">
@@ -15,30 +13,29 @@ export default function ShopHero() {
               </span>
               <span>Shop</span>
             </nav>
-            <h1 className="shop-hero-title">Shop at shafisons</h1>
+
+            <h1 className="shop-hero-title">Refined Collections For Modern Interiors</h1>
             <p className="shop-hero-sub">
-              Discover premium fabric collections by shafisons, designed to match every interior style — from modern to traditional.
+              Discover premium curtain fabrics, sofa textiles, and blinds curated for elegant spaces.
             </p>
-            <div className="mt-3">
-              <strong className="d-block mb-2">Categories</strong>
-              <ul className="list-unstyled mb-3">
-                <li>Curtain Fabrics by shafisons</li>
-                <li>Sofa Fabrics by shafisons</li>
-                <li>Office Blinds by shafisons</li>
-              </ul>
-              <strong className="d-block mb-2">Product Example</strong>
-              <p className="mb-2">Luxury Pattern Curtain – by shafisons</p>
-              <p className="mb-3">High-quality fabric with elegant design</p>
-              <a href="/contact" className="btn-dark d-inline-block">Order via WhatsApp</a>
+
+            <div className="shop-hero-cats">
+              <span>Curtain Fabrics</span>
+              <span>Sofa Fabrics</span>
+              <span>Office Blinds</span>
+            </div>
+
+            <div className="shop-hero-cta-row">
+              <a href="/contact" className="shop-hero-link">Order via WhatsApp</a>
+              <a href="/services" className="shop-hero-link">Book Interior Consultation</a>
             </div>
           </div>
 
-          {/* Quick stats */}
           <div className="shop-hero-stats">
             {[
               { value: "200+", label: "Products" },
-              { value: "12", label: "Categories" },
-              { value: "Free", label: "Shipping" },
+              { value: "12+", label: "Collections" },
+              { value: "Since 1972", label: "Trusted Craft" },
             ].map((s) => (
               <div className="shop-hero-stat" key={s.label}>
                 <strong>{s.value}</strong>
@@ -46,10 +43,8 @@ export default function ShopHero() {
               </div>
             ))}
           </div>
-
         </div>
       </div>
     </section>
   );
 }
-
