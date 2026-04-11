@@ -1,15 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-const heroSlides = [
+const fallbackSlides = [
   { src: "/images/couch.png", alt: "Premium couch set" },
   { src: "/images/sofa.png", alt: "Luxury sofa collection" },
   { src: "/images/product-1.png", alt: "Featured decor product" },
   { src: "/images/product-2.png", alt: "Modern fabric collection" },
 ];
 
-export default function Hero({ title, text, showButtons = false }) {
+export default function Hero({
+  title,
+  text,
+  showButtons = false,
+  label = "New Arrival Campaign",
+  highlights = "50+ years of trusted interior fabric expertise",
+  primaryBtnText = "Shop Now",
+  primaryBtnLink = "/shop",
+  secondaryBtnText = "Explore",
+  secondaryBtnLink = "/services",
+  offerChip = "Free swatches + same day consultation",
+  slides = [],
+}) {
   const [slideIndex, setSlideIndex] = useState(0);
+  const heroSlides = useMemo(() => {
+    if (!Array.isArray(slides)) return fallbackSlides;
+    const cleaned = slides
+      .map((src) => (typeof src === "string" ? src.trim() : ""))
+      .filter(Boolean)
+      .map((src, index) => ({ src, alt: `Hero slide ${index + 1}` }));
+    return cleaned.length ? cleaned : fallbackSlides;
+  }, [slides]);
+
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [heroSlides.length]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -19,30 +43,28 @@ export default function Hero({ title, text, showButtons = false }) {
     return () => window.clearInterval(timer);
   }, []);
 
-  const currentSlide = heroSlides[slideIndex];
+  const currentSlide = heroSlides[slideIndex] || heroSlides[0];
 
   return (
     <section className="hero">
       <div className="container">
         <div className="row align-items-center g-4">
           <div className="col-lg-6 hero-copy-col">
-            <span className="hero-label">New Arrival Campaign</span>
+            <span className="hero-label">{label}</span>
             <h1 className="hero-title display-5 mb-4">
               {title}
             </h1>
             {text && <p className="hero-text mb-4">{text}</p>}
-            <p className="hero-highlights mb-4">
-              50+ years of trusted interior fabric expertise
-            </p>
+            <p className="hero-highlights mb-4">{highlights}</p>
             {showButtons && (
               <div className="d-flex flex-wrap gap-2 align-items-center">
-                <Link to="/shop" className="btn-accent">
-                  Shop Now
+                <Link to={primaryBtnLink || "/shop"} className="btn-accent">
+                  {primaryBtnText || "Shop Now"}
                 </Link>
-                <Link to="/services" className="btn-white-outline">
-                  Explore
+                <Link to={secondaryBtnLink || "/services"} className="btn-white-outline">
+                  {secondaryBtnText || "Explore"}
                 </Link>
-                <span className="hero-offer-chip">Free swatches + same day consultation</span>
+                <span className="hero-offer-chip">{offerChip}</span>
               </div>
             )}
           </div>

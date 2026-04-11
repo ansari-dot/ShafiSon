@@ -1,8 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { apiPost } from "../util/api";
+import usePageMeta from "../util/usePageMeta";
 
-/* ── Icons ── */
+/* â”€â”€ Icons â”€â”€ */
 const ChevronIcon = () => (
   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -45,26 +47,26 @@ const contactInfo = [
   {
     icon: <LocationIcon />,
     label: "Visit Us",
-    value: "43 Raymouth Rd.",
-    sub: "London, UK 3910",
+    value: "Jinnah Road Showroom",
+    sub: "Quetta, Pakistan",
   },
   {
     icon: <EmailIcon />,
     label: "Email Us",
-    value: "hello@furni.com",
+    value: "support@shafisons.com",
     sub: "We reply within 24 hours",
   },
   {
     icon: <PhoneIcon />,
     label: "Call Us",
-    value: "+1 (294) 392-5393",
-    sub: "Mon – Fri, 9am – 6pm",
+    value: "+92 81 123 4567",
+    sub: "Mon â€“ Fri, 9am â€“ 6pm",
   },
   {
     icon: <ClockIcon />,
     label: "Working Hours",
-    value: "Mon – Fri: 9am – 6pm",
-    sub: "Sat: 10am – 4pm",
+    value: "Mon â€“ Fri: 9am â€“ 6pm",
+    sub: "Sat: 10am â€“ 4pm",
   },
 ];
 
@@ -76,6 +78,26 @@ const topics = [
   "Partnership",
   "Other",
 ];
+
+const revealUp = {
+  hidden: { opacity: 0, y: 30, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
+
+const revealCard = {
+  hidden: { opacity: 0, y: 20, scale: 0.98 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
 
 export default function Contact() {
   const [form, setForm]   = useState({ firstName: "", lastName: "", email: "", phone: "", topic: "", message: "" });
@@ -128,7 +150,7 @@ export default function Contact() {
         </nav>
 
         {/* Page header */}
-        <div className="ct-header">
+        <motion.div className="ct-header" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
           <div>
             <span className="section-label">Get in Touch</span>
             <h1 className="ct-title">We'd Love to Hear From You</h1>
@@ -137,30 +159,30 @@ export default function Contact() {
               Our team is here to help.
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main grid */}
         <div className="ct-grid">
 
-          {/* ── Left: Info ── */}
+          {/* â”€â”€ Left: Info â”€â”€ */}
           <div className="ct-info-col">
 
             {/* Contact cards */}
-            <div className="ct-info-cards">
+            <motion.div className="ct-info-cards" initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }} transition={{ staggerChildren: 0.08 }}>
               {contactInfo.map((item, i) => (
-                <div className="ct-info-card" key={i}>
+                <motion.div className="ct-info-card" key={i} variants={revealCard}>
                   <div className="ct-info-icon">{item.icon}</div>
                   <div>
                     <span className="ct-info-label">{item.label}</span>
                     <strong className="ct-info-value">{item.value}</strong>
                     <span className="ct-info-sub">{item.sub}</span>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {/* Map placeholder */}
-            <div className="ct-map">
+            <motion.div className="ct-map" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
               <iframe
                 title="Furni Location"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.3!2d-0.1276!3d51.5074!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTHCsDMwJzI2LjYiTiAwwrAwNyc0MC4wIlc!5e0!3m2!1sen!2suk!4v1234567890"
@@ -171,12 +193,12 @@ export default function Contact() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-            </div>
+            </motion.div>
 
           </div>
 
-          {/* ── Right: Form ── */}
-          <div className="ct-form-col">
+          {/* â”€â”€ Right: Form â”€â”€ */}
+          <motion.div className="ct-form-col" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
             {sent ? (
               <div className="ct-success">
                 <div className="ct-success-icon"><CheckIcon /></div>
@@ -283,17 +305,22 @@ export default function Contact() {
                 </div>
               </form>
             )}
-          </div>
+          </motion.div>
 
         </div>
 
         {/* FAQ strip */}
-        <div className="ct-faq-strip">
+        <motion.div className="ct-faq-strip" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
           <p className="ct-faq-text">Looking for quick answers?</p>
-          <Link to="/" className="ct-faq-link">Browse our FAQ →</Link>
-        </div>
+          <Link to="/" className="ct-faq-link">Browse our FAQ â†’</Link>
+        </motion.div>
 
       </div>
     </main>
   );
 }
+
+
+
+
+

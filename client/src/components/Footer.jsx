@@ -1,4 +1,30 @@
+﻿import { useState } from "react";
+import { apiPost } from "../util/api";
+
 export default function Footer() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await apiPost("/api/subscribers", { name, email });
+      setSent(true);
+      setName("");
+      setEmail("");
+    } catch (err) {
+      setError(err?.message || "Failed to subscribe");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <footer className="footer">
       <div className="container position-relative">
@@ -11,13 +37,32 @@ export default function Footer() {
             <img src="/images/envelope-outline.svg" alt="Envelope" width="20" height="20" />
             <span>Subscribe to Newsletter</span>
           </h3>
-          <form className="footer-newsletter-form">
-            <input type="text" className="form-control" placeholder="Enter your name" />
-            <input type="email" className="form-control" placeholder="Enter your email" />
-            <button className="btn-brand">
+          {sent ? (
+            <div className="small text-success mt-2">Thanks for subscribing. You are added successfully.</div>
+          ) : (
+          <form className="footer-newsletter-form" onSubmit={handleSubscribe}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <button className="btn-brand" type="submit" disabled={saving}>
               <span className="fa fa-paper-plane"></span>
             </button>
           </form>
+          )}
+          {error && <div className="small text-danger mt-2">{error}</div>}
         </div>
 
         <div className="row g-5">

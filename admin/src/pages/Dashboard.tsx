@@ -121,27 +121,27 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         <MetricCard 
           title="Total Orders" 
-          value={metrics ? String(metrics.totalOrders) : '—'} 
+          value={metrics ? String(metrics.totalOrders) : 'ï¿½'} 
           icon={ShoppingBag} 
           trend={metrics ? { value: orderTrendText, isUp: metrics.orderTrend >= 0 } : undefined}
           footerText="from last month"
         />
         <MetricCard 
           title="Total Revenue" 
-          value={metrics ? formatPKR(metrics.totalRevenue) : '—'} 
+          value={metrics ? formatPKR(metrics.totalRevenue) : 'ï¿½'} 
           icon={DollarSign} 
           trend={metrics ? { value: revenueTrendText, isUp: metrics.revenueTrend >= 0 } : undefined}
           footerText="from last month"
         />
         <MetricCard 
           title="Pending Orders" 
-          value={metrics ? String(metrics.pendingOrders) : '—'} 
+          value={metrics ? String(metrics.pendingOrders) : 'ï¿½'} 
           icon={Clock} 
           footerText="Needs attention today"
         />
         <MetricCard 
           title="Low Stock Items" 
-          value={metrics ? String(metrics.lowStock) : '—'} 
+          value={metrics ? String(metrics.lowStock) : 'ï¿½'} 
           icon={AlertTriangle} 
           iconBg="bg-red-50" 
           iconColor="text-red-600"
@@ -153,14 +153,14 @@ export default function Dashboard() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="lg:col-span-2 bg-white border border-black/10 rounded-lg shadow-sm flex flex-col"
+          className="lg:col-span-2 min-w-0 bg-white border border-black/10 rounded-lg shadow-sm flex flex-col"
         >
           <div className="p-5 border-b border-black/10 flex justify-between items-center">
             <h2 className="font-bold text-slate-900">Sales Summary</h2>
             <button className="text-xs font-semibold text-blue-600 hover:underline">View Report</button>
           </div>
-          <div className="p-5 h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="p-5 h-[300px] min-h-[300px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <BarChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis 

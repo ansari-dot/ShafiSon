@@ -42,7 +42,7 @@ export async function getProducts(req, res) {
       const products = await Product.find({ _id: { $in: list } }).lean();
       const order = new Map(list.map((id, i) => [id, i]));
       products.sort((a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0));
-      return res.json(products);
+      return res.json(products.map(normalizeProductDoc));
     }
     const filter = search
       ? { title: { $regex: String(search).trim(), $options: "i" } }

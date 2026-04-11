@@ -66,7 +66,22 @@ type AboutTeamSection = {
   members: TeamMember[];
 };
 
+type HeroBanner = {
+  label: string;
+  titleLine1: string;
+  titleLine2: string;
+  text: string;
+  highlights: string;
+  primaryBtnText: string;
+  primaryBtnLink: string;
+  secondaryBtnText: string;
+  secondaryBtnLink: string;
+  offerChip: string;
+  heroImages: string[];
+};
+
 export default function Content() {
+  const [openHero, setOpenHero] = useState(false);
   const [open, setOpen] = useState(false);
   const [openCompare, setOpenCompare] = useState(false);
   const [openPopular, setOpenPopular] = useState(false);
@@ -82,6 +97,20 @@ export default function Content() {
   const [popularSearch, setPopularSearch] = useState('');
   const [catSearch, setCatSearch] = useState('');
   const [dealSearch, setDealSearch] = useState('');
+
+  const [heroForm, setHeroForm] = useState<HeroBanner>({
+    label: 'New Arrival Campaign',
+    titleLine1: 'Timeless Interiors, Crafted by',
+    titleLine2: 'shafisons',
+    text: 'Premium Curtain Cloth, Sofa Fabrics & Office Blinds - trusted since 1972.',
+    highlights: '50+ years of trusted interior fabric expertise',
+    primaryBtnText: 'Shop Now',
+    primaryBtnLink: '/shop',
+    secondaryBtnText: 'Explore',
+    secondaryBtnLink: '/services',
+    offerChip: 'Free swatches + same day consultation',
+    heroImages: ['/images/couch.png', '/images/sofa.png', '/images/product-1.png', '/images/product-2.png'],
+  });
 
   const [form, setForm] = useState<HomeCollection>({
     title: 'Our Collection',
@@ -136,6 +165,7 @@ export default function Content() {
   useEffect(() => {
     let active = true;
     Promise.all([
+      apiGet<HeroBanner | null>('/api/hero-banner'),
       apiGet<HomeCollection | null>('/api/home-collection'),
       apiGet<CompareSection | null>('/api/compare-section'),
       apiGet<PopularPicks | null>('/api/popular-picks'),
@@ -145,8 +175,23 @@ export default function Content() {
       apiGet<Product[]>('/api/products'),
       apiGet<Category[]>('/api/categories')
     ])
-      .then(([doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList]) => {
+      .then(([heroDoc, doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList]) => {
         if (!active) return;
+        if (heroDoc) {
+          setHeroForm({
+            label: heroDoc.label || 'New Arrival Campaign',
+            titleLine1: heroDoc.titleLine1 || 'Timeless Interiors, Crafted by',
+            titleLine2: heroDoc.titleLine2 || 'shafisons',
+            text: heroDoc.text || '',
+            highlights: heroDoc.highlights || '',
+            primaryBtnText: heroDoc.primaryBtnText || 'Shop Now',
+            primaryBtnLink: heroDoc.primaryBtnLink || '/shop',
+            secondaryBtnText: heroDoc.secondaryBtnText || 'Explore',
+            secondaryBtnLink: heroDoc.secondaryBtnLink || '/services',
+            offerChip: heroDoc.offerChip || '',
+            heroImages: Array.isArray(heroDoc.heroImages) ? heroDoc.heroImages.filter(Boolean) : [],
+          });
+        }
         if (doc) {
           setForm({
             title: doc.title || 'Our Collection',
@@ -292,6 +337,24 @@ export default function Content() {
     }
   };
 
+  const saveHero = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const payload = {
+        ...heroForm,
+        heroImages: (heroForm.heroImages || []).map((s) => s.trim()).filter(Boolean),
+      };
+      await apiPut('/api/hero-banner', payload);
+      setOpenHero(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save hero banner';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveCompare = async () => {
     setSaving(true);
     setError('');
@@ -404,35 +467,54 @@ export default function Content() {
     }));
   };
 
+  const compressImageFile = (file: File, maxW = 1600, maxH = 900, quality = 0.82): Promise<string> => (
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const source = typeof reader.result === 'string' ? reader.result : '';
+        if (!source) return reject(new Error('Invalid image source'));
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Failed to process image'));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = source;
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file'));
+      reader.readAsDataURL(file);
+    })
+  );
+
+  const handleHeroImagesUpload = async (files: FileList | File[] | null) => {
+    if (!files || files.length === 0) return;
+    try {
+      const list = Array.from(files).slice(0, 6);
+      const compressed = await Promise.all(list.map((f) => compressImageFile(f, 1600, 900, 0.82)));
+      setHeroForm((prev) => ({ ...prev, heroImages: [...prev.heroImages, ...compressed].slice(0, 10) }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to process hero image';
+      setError(message);
+    }
+  };
+
   const handleTeamImageUpload = (index: number, file?: File | null) => {
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const source = typeof reader.result === 'string' ? reader.result : '';
-      if (!source) return;
-
-      const img = new Image();
-      img.onload = () => {
-        const maxW = 800;
-        const maxH = 800;
-        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const compressed = canvas.toDataURL('image/jpeg', 0.8);
-        updateTeamMember(index, { img: compressed });
-      };
-      img.src = source;
-    };
-    reader.readAsDataURL(file);
+    compressImageFile(file, 800, 800, 0.8)
+      .then((compressed) => updateTeamMember(index, { img: compressed }))
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : 'Failed to process image';
+        setError(message);
+      });
   };
   return (
     <div>
@@ -446,6 +528,17 @@ export default function Content() {
         </motion.h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 font-medium shadow-sm hover:bg-blue-700 transition-colors">
           New Page
+        </button>
+      </div>
+
+      <div className="mb-6 bg-white border border-black/10 rounded-lg shadow-sm p-5 flex items-center justify-between">
+        <div>
+          <h2 className="font-bold text-slate-900">Homepage: Hero Banner</h2>
+          <p className="text-sm text-slate-500">Manage hero heading, text and button labels on the Home page.</p>
+        </div>
+        <button onClick={() => setOpenHero(true)} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 font-medium shadow-sm hover:bg-blue-700 transition-colors">
+          <Edit3 size={16} />
+          Edit Hero
         </button>
       </div>
 
@@ -514,6 +607,128 @@ export default function Content() {
           Edit Team
         </button>
       </div>
+
+      {openHero && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <h3 className="text-lg font-bold text-slate-900">Edit Hero Banner</h3>
+              <button onClick={() => setOpenHero(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Label</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.label} onChange={(e) => setHeroForm({ ...heroForm, label: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Title Line 2</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.titleLine2} onChange={(e) => setHeroForm({ ...heroForm, titleLine2: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Title Line 1</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.titleLine1} onChange={(e) => setHeroForm({ ...heroForm, titleLine1: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Description</label>
+                <textarea className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" rows={3} value={heroForm.text} onChange={(e) => setHeroForm({ ...heroForm, text: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Highlights</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.highlights} onChange={(e) => setHeroForm({ ...heroForm, highlights: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Primary Button Text</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.primaryBtnText} onChange={(e) => setHeroForm({ ...heroForm, primaryBtnText: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Primary Button Link</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.primaryBtnLink} onChange={(e) => setHeroForm({ ...heroForm, primaryBtnLink: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Secondary Button Text</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.secondaryBtnText} onChange={(e) => setHeroForm({ ...heroForm, secondaryBtnText: e.target.value })} />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Secondary Button Link</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.secondaryBtnLink} onChange={(e) => setHeroForm({ ...heroForm, secondaryBtnLink: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Offer Chip</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={heroForm.offerChip} onChange={(e) => setHeroForm({ ...heroForm, offerChip: e.target.value })} />
+              </div>
+              <div className="col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-500">Hero Images (URLs)</label>
+                  <button
+                    type="button"
+                    onClick={() => setHeroForm((prev) => ({ ...prev, heroImages: [...prev.heroImages, ''] }))}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    + Add Image URL
+                  </button>
+                </div>
+                <div className="mt-2 border border-slate-200 rounded-md p-3 space-y-2">
+                  {heroForm.heroImages.map((img, index) => (
+                    <div key={`hero-img-${index}`} className="grid grid-cols-12 gap-2 items-center">
+                      <input
+                        className="col-span-9 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                        placeholder="https://... or /images/..."
+                        value={img}
+                        onChange={(e) =>
+                          setHeroForm((prev) => ({
+                            ...prev,
+                            heroImages: prev.heroImages.map((src, i) => (i === index ? e.target.value : src)),
+                          }))
+                        }
+                      />
+                      <div className="col-span-2">
+                        {img ? <img src={img} alt={`Hero ${index + 1}`} className="w-full h-10 object-cover rounded border border-slate-200" /> : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHeroForm((prev) => ({
+                            ...prev,
+                            heroImages: prev.heroImages.filter((_, i) => i !== index),
+                          }))
+                        }
+                        className="col-span-1 text-xs text-slate-500 hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {heroForm.heroImages.length === 0 && (
+                    <div className="text-xs text-slate-400">No hero images yet. Add URLs or upload files below.</div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs"
+                      onChange={(e) => handleHeroImagesUpload(e.target.files)}
+                    />
+                    <div className="text-[11px] text-slate-400 mt-1">Upload image files (auto-compressed). These images will show in homepage hero slider.</div>
+                  </div>
+                </div>
+              </div>
+
+              {error && <div className="col-span-2 text-sm text-red-600">{error}</div>}
+
+              <div className="col-span-2 flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setOpenHero(false)} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
+                <button type="button" disabled={saving} onClick={saveHero} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

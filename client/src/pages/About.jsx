@@ -1,10 +1,12 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import TestimonialSlider from "../components/TestimonialSlider";
 import { team, stats } from "../data/siteData";
 import { apiGet } from "../util/api";
+import usePageMeta from "../util/usePageMeta";
 
-/* ── Icons ── */
+/* â”€â”€ Icons â”€â”€ */
 const ChevronIcon = () => (
   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -68,12 +70,32 @@ const values = [
 ];
 
 const timeline = [
-  { year: "2010", title: "Founded in Lahore", desc: "Shafi Sons was born in a small Lahore workshop with a simple belief — beautiful furniture should be accessible to everyone." },
+  { year: "2010", title: "Founded in Lahore", desc: "Shafi Sons was born in a small Lahore workshop with a simple belief â€” beautiful furniture should be accessible to everyone." },
   { year: "2014", title: "First Flagship Store", desc: "We opened our first physical showroom in London, welcoming thousands of customers to experience our pieces in person." },
   { year: "2018", title: "Went Global Online", desc: "Launched our e-commerce platform, bringing Furni to customers across 40+ countries with free international shipping." },
   { year: "2021", title: "Sustainability Pledge", desc: "Committed to carbon-neutral operations by 2025. Switched to 100% renewable energy across all warehouses." },
   { year: "2024", title: "15,000+ Happy Homes", desc: "Crossed 15,000 satisfied customers and launched our custom furniture program for bespoke orders." },
 ];
+
+const revealUp = {
+  hidden: { opacity: 0, y: 36, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.55, ease: "easeOut" },
+  },
+};
+
+const revealCard = {
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.45, ease: "easeOut" },
+  },
+};
 
 export default function About() {
   const [teamSection, setTeamSection] = useState(null);
@@ -101,8 +123,8 @@ export default function About() {
   return (
     <main className="au-page">
 
-      {/* ── Hero ── */}
-      <section className="au-hero">
+      {/* â”€â”€ Hero â”€â”€ */}
+      <motion.section className="au-hero" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <nav className="pd-breadcrumb mb-4">
             <Link to="/">Home</Link>
@@ -122,7 +144,7 @@ export default function About() {
               </p>
               <div className="au-hero-btns">
                 <Link to="/shop" className="btn-brand d-inline-block">Shop Collection</Link>
-                <Link to="/contact" className="au-contact-link">Contact Us →</Link>
+                <Link to="/contact" className="au-contact-link">Contact Us â†’</Link>
               </div>
             </div>
             <div className="au-hero-right">
@@ -143,24 +165,24 @@ export default function About() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Stats ── */}
-      <section className="au-stats-section">
+      {/* â”€â”€ Stats â”€â”€ */}
+      <motion.section className="au-stats-section" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
-          <div className="au-stats-grid">
+          <motion.div className="au-stats-grid" initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }} transition={{ staggerChildren: 0.08 }}>
             {stats.map((s) => (
-              <div className="au-stat-item" key={s.id}>
+              <motion.div className="au-stat-item" key={s.id} variants={revealCard}>
                 <strong className="au-stat-val">{s.value}</strong>
                 <span className="au-stat-label">{s.label}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Our Story ── */}
-      <section className="au-story section-pad">
+      {/* â”€â”€ Our Story â”€â”€ */}
+      <motion.section className="au-story section-pad" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <div className="row g-5 align-items-center">
             <div className="col-lg-6">
@@ -202,30 +224,30 @@ export default function About() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Values ── */}
-      <section className="au-values-section section-pad">
+      {/* â”€â”€ Values â”€â”€ */}
+      <motion.section className="au-values-section section-pad" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <div className="text-center mb-5">
             <span className="section-label">What Drives Us</span>
             <h2 className="fs-2 fw-bold text-dark mt-2">Our Core Values</h2>
             <p className="mt-2 hiw-subtitle">The principles behind every piece we design and every decision we make.</p>
           </div>
-          <div className="au-values-grid">
+          <motion.div className="au-values-grid" initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }} transition={{ staggerChildren: 0.08 }}>
             {values.map((v, i) => (
-              <div className="au-value-card" key={i}>
+              <motion.div className="au-value-card" key={i} variants={revealCard}>
                 <div className="au-value-icon">{v.icon}</div>
                 <h3 className="au-value-title">{v.title}</h3>
                 <p className="au-value-desc">{v.desc}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Timeline ── */}
-      <section className="au-timeline-section section-pad">
+      {/* â”€â”€ Timeline â”€â”€ */}
+      <motion.section className="au-timeline-section section-pad" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <div className="text-center mb-5">
             <span className="section-label">Our Journey</span>
@@ -233,31 +255,31 @@ export default function About() {
           </div>
           <div className="au-timeline">
             {timeline.map((item, i) => (
-              <div className={`au-timeline-item ${i % 2 === 0 ? "left" : "right"}`} key={i}>
+              <motion.div className={`au-timeline-item ${i % 2 === 0 ? "left" : "right"}`} key={i} variants={revealCard} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
                 <div className="au-timeline-card">
                   <span className="au-timeline-year">{item.year}</span>
                   <h3 className="au-timeline-title">{item.title}</h3>
                   <p className="au-timeline-desc">{item.desc}</p>
                 </div>
                 <div className="au-timeline-dot" />
-              </div>
+              </motion.div>
             ))}
             <div className="au-timeline-line" />
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Team ── */}
-      <section className="au-team-section section-pad">
+      {/* â”€â”€ Team â”€â”€ */}
+      <motion.section className="au-team-section section-pad" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <div className="text-center mb-5">
             <span className="section-label">{teamSection?.title || "The People"}</span>
             <h2 className="fs-2 fw-bold text-dark mt-2">{teamSection?.heading || "Meet Our Team"}</h2>
             <p className="mt-2 hiw-subtitle">{teamSection?.text || "The talented individuals behind every Shafi Sons piece."}</p>
           </div>
-          <div className="au-team-grid">
+          <motion.div className="au-team-grid" initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }} transition={{ staggerChildren: 0.08 }}>
             {activeTeam.map((person, idx) => (
-              <div className="au-team-card" key={person.id || `${person.name}-${idx}`}>
+              <motion.div className="au-team-card" key={person.id || `${person.name}-${idx}`} variants={revealCard}>
                 <div className="au-team-img-wrap">
                   <img src={person.img} alt={person.name} className="au-team-img" />
                   <div className="au-team-socials">
@@ -269,33 +291,35 @@ export default function About() {
                   <h3 className="au-team-name">{person.name}</h3>
                   <span className="au-team-role">{person.role}</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* ── Testimonials ── */}
+      {/* â”€â”€ Testimonials â”€â”€ */}
       <TestimonialSlider />
 
-      {/* ── CTA Banner ── */}
-      <section className="au-cta-section">
+      {/* â”€â”€ CTA Banner â”€â”€ */}
+      <motion.section className="au-cta-section" variants={revealUp} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.2 }}>
         <div className="container">
           <div className="au-cta-inner">
             <div className="au-cta-left">
               <h2 className="au-cta-title">Transform your space with shafisons today.</h2>
-              <p className="au-cta-desc">Premium curtain cloth, sofa fabrics, and office blinds — trusted since 1972.</p>
+              <p className="au-cta-desc">Premium curtain cloth, sofa fabrics, and office blinds â€” trusted since 1972.</p>
             </div>
             <div className="au-cta-btns">
               <Link to="/contact" className="au-cta-primary">Contact Us Now</Link>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
     </main>
   );
 }
+
+
 
 
 

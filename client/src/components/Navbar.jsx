@@ -1,8 +1,9 @@
 import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { navLinks } from "../data/siteData";
+import { useState, useEffect, useMemo } from "react";
+import { navLinks, shopProducts as localShopProducts } from "../data/siteData";
 import { getCartCount } from "../util/cart";
 import { getWishlistCount } from "../wishlist";
+import { apiGet } from "../util/api";
 import logo from "../assets/logo.png";
 
 const SearchIcon = () => (
@@ -47,6 +48,59 @@ export default function Navbar() {
   const [searchVal, setSearchVal] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [megaOpen, setMegaOpen] = useState(false);
+  const [megaItems, setMegaItems] = useState([]);
+
+  const makeShopLink = (key, value) => {
+    const params = new URLSearchParams();
+    params.set(key, value);
+    return `/shop?${params.toString()}`;
+  };
+
+  const megaCategories = useMemo(() => {
+    const source = megaItems.length ? megaItems : localShopProducts;
+    const counts = source.reduce((acc, item) => {
+      const key = (item?.category || "").trim();
+      if (!key) return acc;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([label, count]) => ({
+        label,
+        count,
+        to: makeShopLink("category", label),
+      }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, 5);
+  }, [megaItems]);
+
+  const megaMaterials = useMemo(() => {
+    const source = megaItems.length ? megaItems : localShopProducts;
+    const counts = source.reduce((acc, item) => {
+      const key = (item?.material || "").trim();
+      if (!key) return acc;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([label, count]) => ({
+        label,
+        count,
+        to: makeShopLink("material", label),
+      }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, 5);
+  }, [megaItems]);
+
+  const megaShortcuts = [
+    { label: "Top Rated", to: "/shop?sort=rating" },
+    { label: "Price: Low to High", to: "/shop?sort=price_asc" },
+    { label: "Price: High to Low", to: "/shop?sort=price_desc" },
+    { label: "Deals", to: "/shop?deal=1" },
+  ];
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -73,6 +127,25 @@ export default function Navbar() {
       window.removeEventListener("cart:updated", update);
       window.removeEventListener("wishlist:updated", update);
       window.removeEventListener("storage", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadMegaItems = async () => {
+      try {
+        const data = await apiGet("/api/products");
+        if (!active) return;
+        const list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
+        setMegaItems(list);
+      } catch {
+        if (!active) return;
+        setMegaItems([]);
+      }
+    };
+    loadMegaItems();
+    return () => {
+      active = false;
     };
   }, []);
 
@@ -145,13 +218,87 @@ export default function Navbar() {
           <div className="nb-inner">
             <ul className="nb-links">
               {navLinks.map((item) => (
-                <li key={item.to}>
+                <li
+                  key={item.to}
+                  className={item.to === "/shop" ? "nb-link-item nb-link-item-shop" : "nb-link-item"}
+                  onMouseEnter={() => item.to === "/shop" && setMegaOpen(true)}
+                  onMouseLeave={() => item.to === "/shop" && setMegaOpen(false)}
+                  onFocus={() => item.to === "/shop" && setMegaOpen(true)}
+                  onBlur={() => item.to === "/shop" && setMegaOpen(false)}
+                >
                   <NavLink
                     to={item.to}
                     className={({ isActive }) => `nb-link ${isActive ? "nb-link-active" : ""}`}
+                    onClick={() => setMegaOpen(false)}
                   >
                     {item.label}
                   </NavLink>
+
+                  {item.to === "/shop" && (
+                    <div
+                      className={`nb-mega ${megaOpen ? "nb-mega-open" : ""}`}
+                      onMouseEnter={() => setMegaOpen(true)}
+                      onMouseLeave={() => setMegaOpen(false)}
+                    >
+                      <div className="nb-mega-inner">
+                        <div className="nb-mega-col">
+                          <p className="nb-mega-title">Shop by Category</p>
+                          <ul className="nb-mega-list">
+                            <li>
+                              <Link to="/shop" className="nb-mega-link" onClick={() => setMegaOpen(false)}>
+                                <span>All Products</span>
+                                <small>{(megaItems.length ? megaItems : localShopProducts).length}</small>
+                              </Link>
+                            </li>
+                            {megaCategories.map((cat) => (
+                              <li key={cat.label}>
+                                <Link to={cat.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
+                                  <span>{cat.label}</span>
+                                  <small>{cat.count}</small>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="nb-mega-col">
+                          <p className="nb-mega-title">Materials</p>
+                          <ul className="nb-mega-list">
+                            {megaMaterials.map((mat) => (
+                              <li key={mat.label}>
+                                <Link to={mat.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
+                                  <span>{mat.label}</span>
+                                  <small>{mat.count}</small>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="nb-mega-col">
+                          <p className="nb-mega-title">Quick Filters</p>
+                          <ul className="nb-mega-list">
+                            {megaShortcuts.map((shortcut) => (
+                              <li key={shortcut.label}>
+                                <Link to={shortcut.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
+                                  {shortcut.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="nb-mega-feature">
+                          <span className="nb-mega-kicker">Spring Edit</span>
+                          <h4>Crafted Comfort for Every Room</h4>
+                          <p>Discover premium furniture collections with clean lines, timeless textures, and everyday comfort.</p>
+                          <Link to="/shop" className="nb-mega-cta" onClick={() => setMegaOpen(false)}>
+                            Explore All Products
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

@@ -27,26 +27,74 @@ export default function ProductComparison() {
     apiGet("/api/compare-section")
       .then((doc) => {
         if (!activeReq) return;
-        if (doc && doc.productIds && doc.productIds.length) {
+        const rawIds = Array.isArray(doc?.productIds) ? doc.productIds : [];
+        const ids = rawIds
+          .map((id) => {
+            if (!id) return "";
+            if (typeof id === "string") return id;
+            if (typeof id === "object" && id._id) return String(id._id);
+            return String(id);
+          })
+          .map((id) => id.trim())
+          .filter(Boolean);
+
+        if (doc && ids.length) {
           setSection(doc);
-          apiGet(`/api/products?ids=${doc.productIds.join(",")}`)
+          apiGet(`/api/products?ids=${ids.join(",")}`)
             .then((list) => {
               if (!activeReq) return;
-              setProducts(Array.isArray(list) ? list : []);
+              const normalized = Array.isArray(list) ? list.filter((p) => p && p._id) : [];
+              if (normalized.length) {
+                setProducts(normalized);
+                return;
+              }
+              apiGet("/api/products")
+                .then((fallback) => {
+                  if (!activeReq) return;
+                  setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
+                })
+                .catch(() => {
+                  if (!activeReq) return;
+                  setProducts([]);
+                });
+            })
+            .catch(() => {
+              if (!activeReq) return;
+              apiGet("/api/products")
+                .then((fallback) => {
+                  if (!activeReq) return;
+                  setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
+                })
+                .catch(() => {
+                  if (!activeReq) return;
+                  setProducts([]);
+                });
+            });
+        } else {
+          setSection(doc || null);
+          apiGet("/api/products")
+            .then((fallback) => {
+              if (!activeReq) return;
+              setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
             })
             .catch(() => {
               if (!activeReq) return;
               setProducts([]);
             });
-        } else {
-          setSection(null);
-          setProducts([]);
         }
       })
       .catch(() => {
         if (!activeReq) return;
         setSection(null);
-        setProducts([]);
+        apiGet("/api/products")
+          .then((fallback) => {
+            if (!activeReq) return;
+            setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
+          })
+          .catch(() => {
+            if (!activeReq) return;
+            setProducts([]);
+          });
       });
     return () => { activeReq = false; };
   }, []);

@@ -1,19 +1,31 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import ShopHero from "../components/ShopHero";
 import { formatPKR } from "../util/formatCurrency";
 import { apiGet } from "../util/api";
 import { addToCart } from "../util/cart";
 import { getWishlist, toggleWishlist } from "../wishlist";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
+import usePageMeta from "../util/usePageMeta";
 
 const SORT_OPTIONS = [
   { label: "Featured",          value: "featured"   },
-  { label: "Price: Low ? High", value: "price_asc"  },
-  { label: "Price: High ? Low", value: "price_desc" },
+  { label: "Price: Low to High", value: "price_asc"  },
+  { label: "Price: High to Low", value: "price_desc" },
   { label: "Top Rated",         value: "rating"     },
   { label: "Most Reviewed",     value: "reviews"    },
 ];
+
+const revealUp = {
+  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.45, ease: "easeOut" },
+  },
+};
 
 /* -- Icons -- */
 const StarIcon = ({ filled = true }) => (
@@ -112,7 +124,13 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
     }, 1);
   };
   return (
-    <div className={`sp-card ${isList ? "sp-card-list" : ""}`}>
+    <motion.div
+      className={`sp-card ${isList ? "sp-card-list" : ""}`}
+      variants={revealUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: false, amount: 0.2 }}
+    >
       <div className="sp-card-img-wrap">
         <Link to={`/shop/${item._id}`}>
           <img src={item.img} alt={item.title} className="sp-card-img" />
@@ -141,7 +159,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
           <span className="sp-card-rating-num">{item.rating || 0}</span>
           <span className="sp-card-reviews">({item.reviews || 0} reviews)</span>
         </div>
-        {isList && <p className="sp-card-desc">Handcrafted with premium {item.material?.toLowerCase() || "materials"} â€” built for comfort and lasting style.</p>}
+        {isList && <p className="sp-card-desc">Handcrafted with premium {item.material?.toLowerCase() || "materials"} Ã¢â‚¬â€ built for comfort and lasting style.</p>}
         <div className="sp-card-footer">
           {dealActive ? (
             <div className="sp-card-price">
@@ -158,7 +176,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -172,6 +190,18 @@ export default function Shop() {
   const isDealPage = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("deal") === "1";
+  }, [location.search]);
+  const queryCategory = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get("category") || "").trim();
+  }, [location.search]);
+  const queryMaterial = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get("material") || "").trim();
+  }, [location.search]);
+  const querySort = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get("sort") || "").trim();
   }, [location.search]);
 
   const [items, setItems] = useState([]);
@@ -267,6 +297,26 @@ export default function Shop() {
   }, [items]);
 
   useEffect(() => {
+    if (queryCategory && CATEGORIES.includes(queryCategory)) {
+      setCategory(queryCategory);
+    } else if (!queryCategory) {
+      setCategory("All");
+    }
+
+    if (queryMaterial && MATERIALS.includes(queryMaterial)) {
+      setMaterial(queryMaterial);
+    } else if (!queryMaterial) {
+      setMaterial("All");
+    }
+
+    if (querySort && SORT_OPTIONS.some((option) => option.value === querySort)) {
+      setSort(querySort);
+    } else if (!querySort) {
+      setSort("featured");
+    }
+  }, [queryCategory, queryMaterial, querySort, CATEGORIES, MATERIALS]);
+
+  useEffect(() => {
     const updateWished = () => setWished(getWishlist().map((item) => item.id));
     window.addEventListener("wishlist:updated", updateWished);
     return () => window.removeEventListener("wishlist:updated", updateWished);
@@ -310,7 +360,7 @@ export default function Shop() {
     category  !== "All" && { key: "cat",    label: category,          clear: () => setCategory("All")  },
     material  !== "All" && { key: "mat",    label: material,          clear: () => setMaterial("All")  },
     maxPrice  >  0      && { key: "price",  label: `Up to ${formatPKR(maxPrice)}`, clear: () => setMaxPrice(Math.max(...items.map(p => p.price || 0)))  },
-    minRating >  0      && { key: "rating", label: `${minRating}+ ?`, clear: () => setMinRating(0)     },
+    minRating >  0      && { key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0)     },
   ].filter(Boolean);
 
   const SidebarContent = (
@@ -366,7 +416,7 @@ export default function Shop() {
       </FilterGroup>
 
       <FilterGroup title="Customer Rating">
-        {[[0,"All Ratings"],[4,"4? & above"],[4.5,"4.5? & above"],[4.8,"4.8? & above"]].map(([val, lbl]) => (
+        {[[0,"All Ratings"],[4,"4.0 & above"],[4.5,"4.5 & above"],[4.8,"4.8 & above"]].map(([val, lbl]) => (
           <label key={val} className="sp-check-row">
             <input type="radio" name="rating" checked={minRating === val}
               onChange={() => setMinRating(val)} className="sp-radio" />
@@ -408,7 +458,13 @@ export default function Shop() {
                 </select>
               </div>
 
-              <div className="sp-toolbar">
+              <motion.div
+                className="sp-toolbar"
+                variants={revealUp}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: false, amount: 0.2 }}
+              >
                 <div className="sp-toolbar-left">
                   {queryText && (
                     <p className="sp-count mb-1">
@@ -438,7 +494,7 @@ export default function Shop() {
                     <button className={`sp-view-btn ${view === "list" ? "active" : ""}`} onClick={() => setView("list")} aria-label="List view"><ListIcon /></button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {loading && (
                 <div className="sp-empty">
@@ -463,13 +519,19 @@ export default function Shop() {
                   <button className="btn-brand" onClick={resetAll}>Clear Filters</button>
                 </div>
               ) : (
-                <div className={view === "grid" ? "sp-grid" : "sp-list"}>
+                <motion.div
+                  className={view === "grid" ? "sp-grid" : "sp-list"}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: false, amount: 0.1 }}
+                  transition={{ staggerChildren: 0.06 }}
+                >
                   {filtered.map(item => (
                     <ProductCard key={item._id} item={item} view={view}
                       wished={wished.includes(item._id)} onWish={toggleWish}
                       deal={deal} getDealPrice={getDealPrice} isDealActive={isDealActive} />
                   ))}
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -479,6 +541,9 @@ export default function Shop() {
     </main>
   );
 }
+
+
+
 
 
 
