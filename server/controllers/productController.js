@@ -36,7 +36,9 @@ function normalizeProductDoc(product) {
 
 export async function getProducts(req, res) {
   try {
-    const { search, ids } = req.query;
+    const { search, ids, page, limit } = req.query;
+
+    // ids mode — no pagination (used internally)
     if (ids) {
       const list = String(ids).split(",").map((s) => s.trim()).filter(Boolean);
       const products = await Product.find({ _id: { $in: list } }).lean();
@@ -44,14 +46,29 @@ export async function getProducts(req, res) {
       products.sort((a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0));
       return res.json(products.map(normalizeProductDoc));
     }
+
     const filter = search
       ? { $or: [
           { title: { $regex: String(search).trim(), $options: "i" } },
           { sku:   { $regex: String(search).trim(), $options: "i" } },
         ]}
       : {};
-    const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
-    return res.json(products.map(normalizeProductDoc));
+
+    const pageNum  = Math.max(1, parseInt(page)  || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 20);
+    const skip     = (pageNum - 1) * limitNum;
+
+    const [products, total] = await Promise.all([
+      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Product.countDocuments(filter),
+    ]);
+
+    return res.json({
+      products: products.map(normalizeProductDoc),
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+    });
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch products" });
   }

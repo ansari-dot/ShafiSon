@@ -1979,10 +1979,12 @@ a:hover {
 
 .sp-page {
     background: radial-gradient(circle at 6% 0%, rgba(232, 227, 214, 0.55), transparent 30%), #f8f7f4;
+    position: relative;
 }
 
 .sp-wrap {
     padding: 2rem 0 5rem;
+    position: relative;
 }
 
 .sp-wrap .container {
@@ -8675,4 +8677,100 @@ a:hover {
   z-index: 20;
   /* subtle glass ring */
   backdrop-filter: none;
+}
+
+/* ── Shop Pagination ── */
+.sp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e3ddd1;
+  flex-wrap: wrap;
+}
+
+.sp-page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d8cebf;
+  background: transparent;
+  color: var(--dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sp-page-btn:hover:not(:disabled) {
+  background: var(--lightbg);
+  border-color: #9b8974;
+}
+
+.sp-page-btn.active {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: #fff;
+}
+
+.sp-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sp-page-ellipsis {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Shop Card Color Swatches ── */
+.sp-card-color-swatches {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  background: rgba(255,255,255,0.88);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(46,13,16,0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  pointer-events: none;
+}
+
+.sp-card:hover .sp-card-color-swatches {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sp-card-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.sp-card-color-dot:hover,
+.sp-card-color-dot.active {
+  transform: scale(1.25);
+  border-color: var(--dark);
 }

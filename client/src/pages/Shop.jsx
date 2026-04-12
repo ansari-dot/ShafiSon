@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import ShopHero from "../components/ShopHero";
@@ -111,6 +111,8 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
   const lowStock = isLowStock(item);
   const quantity = getQuantity(item);
   const dealPrice = dealActive ? getDealPrice(item.price, deal) : null;
+  const hoverImg = item?.imgs?.[0] && item.imgs[0] !== item.img ? item.imgs[0] : null;
+  const [hovered, setHovered] = useState(false);
   const handleAdd = () => {
     if (outOfStock) return;
     const unitPrice = dealActive ? dealPrice : item.price;
@@ -130,10 +132,17 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
       initial="hidden"
       whileInView="show"
       viewport={{ once: false, amount: 0.2 }}
+      onMouseEnter={() => hoverImg && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div className="sp-card-img-wrap">
         <Link to={`/shop/${item._id}`}>
-          <img src={item.img} alt={item.title} className="sp-card-img" />
+          <img
+            src={hovered && hoverImg ? hoverImg : item.img}
+            alt={item.title}
+            className="sp-card-img"
+            style={{ transition: "opacity 0.25s ease" }}
+          />
         </Link>
         {item.badge && <span className={`sp-badge sp-badge-${item.badge.toLowerCase()}`}>{item.badge}</span>}
         {outOfStock && <span className="sp-stock-badge sp-stock-badge-out">Out of Stock</span>}
@@ -245,14 +254,14 @@ export default function Shop() {
           }
           const data = await apiGet(`/api/products?ids=${ids}`);
           if (!active) return;
-          list = Array.isArray(data) ? data : [];
+          list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
         } else {
           const path = queryText
             ? `/api/products?search=${encodeURIComponent(queryText)}`
             : "/api/products";
           const data = await apiGet(path);
           if (!active) return;
-          list = Array.isArray(data) ? data : [];
+          list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
         }
 
         if (!active) return;
@@ -626,7 +635,6 @@ export default function Shop() {
     </main>
   );
 }
-
 
 
 

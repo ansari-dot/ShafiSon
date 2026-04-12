@@ -72,7 +72,7 @@ export default function Navbar() {
         const doc = megaCategoryDocs.find(c => c.name === label);
         const subcategories = (
           doc?.subcategories?.length
-            ? doc.subcategories
+            ? doc.subcategories.map(s => (typeof s === "object" ? s.name : s)).filter(Boolean)
             : [...new Set(source.filter(p => (p?.category || '').trim() === label && p?.subcategory).map(p => p.subcategory))]
         ).map(s => ({
           label: s,
@@ -190,7 +190,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className={`nb-nav ${scrolled ? "nb-scrolled" : ""}`}>
+      <nav className="nb-nav nb-scrolled">
         <div className="container">
           <div className="nb-main-row">
             <form className="nb-search-slot" onSubmit={submitSearch}>
