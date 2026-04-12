@@ -63,6 +63,11 @@ export default function Checkout() {
           title: i.title,
           qty: i.qty,
           unitPrice: i.unitPrice,
+          size: i.size || '',
+          color: i.color || '',
+          colorHex: i.colorHex || '',
+          sku: i.sku || '',
+          subcategorySerial: i.subcategorySerial || '',
         })),
         customer: {
           firstName: form.firstName,
@@ -187,10 +192,22 @@ export default function Checkout() {
 
                   <div className="checkout-order-list">
                     {items.map((row) => (
-                      <div key={row.id} className="checkout-order-row">
+                      <div key={row.id + (row.size||'') + (row.color||'')} className="checkout-order-row">
                         <div>
                           <p className="checkout-order-name">{row.title}</p>
                           <p className="checkout-order-qty">Qty: {row.qty}</p>
+                          {(row.color || row.size) && (
+                            <p className="checkout-order-qty" style={{ display:'flex', alignItems:'center', gap:6 }}>
+                              {row.color && (
+                                <span style={{ display:'flex', alignItems:'center', gap:4 }}>
+                                  {row.colorHex && <span style={{ width:10, height:10, borderRadius:'50%', background:row.colorHex, border:'1px solid #d8cebf', display:'inline-block' }} />}
+                                  {row.color}
+                                </span>
+                              )}
+                              {row.color && row.size && <span>·</span>}
+                              {row.size && <span>Size: {row.size}</span>}
+                            </p>
+                          )}
                         </div>
                         <p className="checkout-order-price">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</p>
                       </div>

@@ -54,6 +54,11 @@ export async function initPayfast(req, res) {
         unitPrice,
         originalPrice: Number(basePrice || 0),
         isDeal,
+        size: c.size || '',
+        color: c.color || '',
+        colorHex: c.colorHex || '',
+        sku: prod?.sku || c.sku || '',
+        subcategorySerial: c.subcategorySerial || '',
       };
     });
 

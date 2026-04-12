@@ -254,7 +254,23 @@ export default function Orders() {
                     <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
                       <div>
                         <div className="font-semibold text-slate-900">{item.title}</div>
+                        {item.sku && <div className="text-[11px] font-mono text-slate-400">SKU: {item.sku}</div>}
+                        {item.subcategorySerial && <div className="text-[11px] font-mono text-slate-400">Sub-cat #: {item.subcategorySerial}</div>}
                         <div className="text-slate-500">Qty: {item.qty}</div>
+                        {(item.color || item.size) && (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {item.color && (
+                              <span className="flex items-center gap-1 text-slate-500">
+                                {item.colorHex && (
+                                  <span style={{ width:10, height:10, borderRadius:'50%', background:item.colorHex, border:'1px solid #cbd5e1', display:'inline-block', flexShrink:0 }} />
+                                )}
+                                {item.color}
+                              </span>
+                            )}
+                            {item.color && item.size && <span className="text-slate-300">·</span>}
+                            {item.size && <span className="text-slate-500">Size: {item.size}</span>}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className="text-slate-900 font-semibold">{formatPKR(item.unitPrice || 0)}</div>

@@ -184,6 +184,17 @@ export default function Cart() {
                       <div className="cart-line-main">
                         <h3 className="cart-line-title">{row.title}</h3>
                         {row.isDeal && <span className="cart-deal-badge">Deal item</span>}
+                        {(row.size || row.color) && (
+                          <div className="cart-line-variants">
+                            {row.color && (
+                              <span className="cart-line-variant">
+                                {row.colorHex && <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:row.colorHex, border:'1px solid #d8cebf', marginRight:4, verticalAlign:'middle' }} />}
+                                {row.color}
+                              </span>
+                            )}
+                            {row.size && <span className="cart-line-variant">Size: {row.size}</span>}
+                          </div>
+                        )}
 
                         <div className="cart-line-price-wrap">
                           <span className="cart-line-price">{formatPKR(row.unitPrice)}</span>
@@ -196,7 +207,7 @@ export default function Cart() {
                           <div className="cart-qty">
                             <button
                               className="cart-qty-btn"
-                              onClick={() => updateQty(row.id, Math.max(1, (row.qty || 1) - 1))}
+                              onClick={() => updateQty(row.id, Math.max(1, (row.qty || 1) - 1), row.size, row.color)}
                               aria-label="Decrease quantity"
                             >
                               -
@@ -204,7 +215,7 @@ export default function Cart() {
                             <span className="cart-qty-num">{row.qty}</span>
                             <button
                               className="cart-qty-btn"
-                              onClick={() => updateQty(row.id, (row.qty || 1) + 1)}
+                              onClick={() => updateQty(row.id, (row.qty || 1) + 1, row.size, row.color)}
                               aria-label="Increase quantity"
                             >
                               +
@@ -213,7 +224,7 @@ export default function Cart() {
 
                           <strong className="cart-line-total">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</strong>
 
-                          <button className="cart-remove-btn" onClick={() => removeFromCart(row.id)}>
+                          <button className="cart-remove-btn" onClick={() => removeFromCart(row.id, row.size, row.color)}>
                             Remove
                           </button>
                         </div>

@@ -8544,3 +8544,135 @@ a:hover {
   background: rgba(220,200,160,0.4);
   color: #20140f;
 }
+
+/* Color Variant Swatches */
+.pd-color-swatches {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pd-color-swatch {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #d8cebf;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, transform 0.15s;
+  background: #f4f6f5;
+  padding: 0;
+}
+
+.pd-color-swatch.active {
+  border-color: var(--dark);
+  transform: scale(1.08);
+}
+
+.pd-color-swatch:hover:not(.active) {
+  border-color: #9b8974;
+}
+
+.pd-color-swatch-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pd-color-swatch-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dark);
+  text-align: center;
+  padding: 2px;
+  line-height: 1.2;
+}
+
+.pd-color-swatch-hex {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 0;
+}
+
+.pd-color-swatch-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pd-color-swatch-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-color-swatch.active + .pd-color-swatch-name,
+.pd-color-swatch-wrap:has(.pd-color-swatch.active) .pd-color-swatch-name {
+  color: var(--dark);
+}
+
+.cart-line-variants {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cart-line-variant {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--lightbg);
+  border: 1px solid #e3ddd1;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ── Product Image Zoom Lens ── */
+.pd-zoom-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: crosshair;
+  overflow: hidden;
+}
+
+.pd-zoom-wrap .pd-main-img {
+  /* disable the old CSS hover scale — zoom replaces it */
+  transition: none;
+}
+
+.pd-zoom-wrap:hover .pd-main-img {
+  transform: none;
+}
+
+.pd-zoom-lens {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 2px solid rgba(46, 13, 16, 0.25);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.35);
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 20;
+  /* subtle glass ring */
+  backdrop-filter: none;
+}

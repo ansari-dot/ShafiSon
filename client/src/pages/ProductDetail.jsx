@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
@@ -63,6 +63,58 @@ const CheckIcon = () => (
   </svg>
 );
 
+const ZOOM = 2.5;
+const LENS = 130; // lens diameter px
+
+function ImageZoom({ src, alt }) {
+  const wrapRef = useRef(null);
+  const [lens, setLens] = useState(null); // { x, y } cursor pos relative to wrap
+
+  const onMove = useCallback((e) => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setLens({ x, y });
+  }, []);
+
+  const onLeave = useCallback(() => setLens(null), []);
+
+  // clamp lens center so it stays inside the image
+  const half = LENS / 2;
+  const lensX = lens ? Math.min(Math.max(lens.x, half), (wrapRef.current?.offsetWidth || 0) - half) : 0;
+  const lensY = lens ? Math.min(Math.max(lens.y, half), (wrapRef.current?.offsetHeight || 0) - half) : 0;
+
+  // background-position: shift so the zoomed area is centred under the lens
+  const bgX = lens ? -(lensX * ZOOM - half) : 0;
+  const bgY = lens ? -(lensY * ZOOM - half) : 0;
+
+  return (
+    <div
+      ref={wrapRef}
+      className="pd-zoom-wrap"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
+      <img src={src} alt={alt} className="pd-main-img" />
+      {lens && (
+        <div
+          className="pd-zoom-lens"
+          style={{
+            left: lensX - half,
+            top: lensY - half,
+            backgroundImage: `url(${src})`,
+            backgroundSize: `${(wrapRef.current?.offsetWidth || 0) * ZOOM}px ${(wrapRef.current?.offsetHeight || 0) * ZOOM}px`,
+            backgroundPosition: `${bgX}px ${bgY}px`,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+
 function Stars({ rating }) {
   return (
     <span className="pd-stars">
@@ -101,7 +153,8 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
 
   const [activeImg, setActiveImg] = useState(0);
-  const [selectedSize, setSize] = useState(0);
+  const [selectedSize, setSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [qty, setQty] = useState(1);
   const [wished, setWished] = useState(false);
   const [added, setAdded] = useState(false);
@@ -116,6 +169,8 @@ export default function ProductDetail() {
         setWished(hasInWishlist(p?._id));
         setAllProducts(Array.isArray(list) ? list : []);
         setDeal(dealDoc || null);
+        setSize(null);
+        setSelectedColor(null);
         setError("");
       })
       .catch((err) => {
@@ -159,7 +214,15 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.imgs && product.imgs.length ? product.imgs : (product.img ? [product.img] : []);
+  const images = product.img ? [product.img] : [];
+  const colorImages = (product.colors || []).filter(c => c.image).map(c => c.image);
+  // gallery = main img + all color images
+  const gallery = [...new Set([...images, ...colorImages])];
+  const activeColor = selectedColor !== null ? product.colors?.[selectedColor] : null;
+  // when a color is selected, put its image first
+  const displayImages = activeColor?.image
+    ? [activeColor.image, ...gallery.filter(img => img !== activeColor.image)]
+    : gallery;
   const related = allProducts.filter(p => p.category === product.category && p._id !== product._id).slice(0, 4);
   const browseMore = allProducts.filter((p) => p._id !== product._id).slice(0, 3);
 
@@ -190,13 +253,22 @@ export default function ProductDetail() {
     if (outOfStock) return;
     setAdded(true);
     const unitPrice = dealActive ? dealPrice : product.price;
+    const selectedSizeName = selectedSize !== null ? (product.sizes || [])[selectedSize] || '' : '';
+    const selectedColorName = activeColor ? activeColor.name : '';
+    // find subcategory serial from allProducts categories (passed via product data)
+    const subcategorySerial = product.subcategorySerial || '';
     addToCart({
       id: product._id,
       title: product.title,
-      img: product.img,
+      img: activeColor?.image || product.img,
       unitPrice: Number(unitPrice || 0),
       originalPrice: Number(product.price || 0),
       isDeal: !!product.isDeal,
+      size: selectedSizeName,
+      color: selectedColorName,
+      colorHex: activeColor?.hex || '',
+      sku: product.sku || '',
+      subcategorySerial,
     }, qty);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -227,7 +299,7 @@ export default function ProductDetail() {
           <div className="pd-gallery">
             {/* Desktop: vertical thumbs on left */}
             <div className="pd-thumbs pd-thumbs-desktop">
-              {images.map((img, i) => (
+              {displayImages.map((img, i) => (
                 <button
                   key={i}
                   className={`pd-thumb ${activeImg === i ? "active" : ""}`}
@@ -244,8 +316,8 @@ export default function ProductDetail() {
                 {product.badge && (
                   <span className={badgeClass(product.badge)}>{product.badge}</span>
                 )}
-                {images[activeImg] && (
-                  <img src={images[activeImg]} alt={product.title} className="pd-main-img" />
+                {displayImages[activeImg] && (
+                  <ImageZoom src={displayImages[activeImg]} alt={product.title} />
                 )}
                 <button
                   className={`pd-wish-float ${wished ? "active" : ""}`}
@@ -258,7 +330,7 @@ export default function ProductDetail() {
 
               {/* Mobile: horizontal thumb strip below main image */}
               <div className="pd-thumbs-mobile">
-                {images.map((img, i) => (
+                {displayImages.map((img, i) => (
                   <button
                     key={i}
                     className={`pd-thumb ${activeImg === i ? "active" : ""}`}
@@ -279,7 +351,7 @@ export default function ProductDetail() {
               <span className="pd-cat-label">{product.category}</span>
               {outOfStock && <span className="pd-out-badge">Out of Stock</span>}
               {lowStock && <span className="pd-low-badge">Low Stock ({stockQty} left)</span>}
-              {product.color && <span className="pd-color-text">Color: {product.color}</span>}
+              {product.color && <span className="pd-color-text">Color: {activeColor ? activeColor.name : product.color}</span>}
               {dealActive && <span className="pd-deal-badge">Deal</span>}
             </div>
 
@@ -315,21 +387,57 @@ export default function ProductDetail() {
             <div className="pd-divider" />
 
 
-            {/* Size */}
-            <div className="pd-option-group">
-              <label className="pd-option-label">Size</label>
-              <div className="pd-sizes">
-                {(product.sizes || []).map((s, i) => (
-                  <button
-                    key={i}
-                    className={`pd-size-btn ${selectedSize === i ? "active" : ""}`}
-                    onClick={() => setSize(i)}
-                  >
-                    {s}
-                  </button>
-                ))}
+            {/* Color Variants */}
+            {product.colors && product.colors.length > 0 && (
+              <div className="pd-option-group">
+                <label className="pd-option-label">Color</label>
+                <div className="pd-color-swatches">
+                  {product.colors.map((c, i) => (
+                    <div key={i} className="pd-color-swatch-wrap">
+                      <button
+                        className={`pd-color-swatch ${selectedColor === i ? "active" : ""}`}
+                        onClick={() => {
+                          setSelectedColor(i);
+                          setActiveImg(0);
+                        }}
+                        title={c.name}
+                      >
+                        {c.hex
+                          ? <span className="pd-color-swatch-hex" style={{ background: c.hex }} />
+                          : c.image
+                            ? <img src={c.image} alt={c.name} className="pd-color-swatch-img" />
+                            : <span className="pd-color-swatch-label">{c.name}</span>
+                        }
+                      </button>
+                      {c.name && <span className="pd-color-swatch-name">{c.name}</span>}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Size */}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="pd-option-group">
+                <label className="pd-option-label">
+                  Size
+                  {selectedSize !== null && (
+                    <span className="pd-option-val"> — {product.sizes[selectedSize]}</span>
+                  )}
+                </label>
+                <div className="pd-sizes">
+                  {product.sizes.map((s, i) => (
+                    <button
+                      key={i}
+                      className={`pd-size-btn ${selectedSize === i ? "active" : ""}`}
+                      onClick={() => setSize(selectedSize === i ? null : i)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Qty + CTA */}
             <div className="pd-cta-row">

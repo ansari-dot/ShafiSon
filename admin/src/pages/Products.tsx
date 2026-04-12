@@ -8,11 +8,14 @@ import { formatPKR } from '@/src/lib/formatCurrency';
 type Category = {
   _id: string;
   name: string;
-  subcategories?: string[];
+  subcategories?: { name: string; serialNumber: string }[];
 };
+
+type ColorVariant = { name: string; image: string; hex: string };
 
 type Product = {
   _id: string;
+  sku?: string;
   title: string;
   category: string;
   subcategory?: string;
@@ -25,9 +28,9 @@ type Product = {
   createdAt?: string;
   material?: string;
   badge?: string | null;
-  color?: string;
   sizes?: string[];
   imgs?: string[];
+  colors?: ColorVariant[];
   description?: string;
   specs?: {
     Dimensions?: string;
@@ -46,11 +49,9 @@ const emptyForm = {
   subcategory: '',
   material: '',
   img: '',
-  imgs: '',
   rating: '',
   reviews: '',
   badge: '',
-  color: '',
   sizes: '',
   description: '',
   specDimensions: '',
@@ -61,23 +62,10 @@ const emptyForm = {
   inStock: true,
 };
 
+const emptyColor: ColorVariant = { name: '', image: '', hex: '#000000' };
+
 type FormState = typeof emptyForm;
 
-function parseImageListInput(input: string): string[] {
-  const text = String(input || '');
-  if (!text.trim()) return [];
-
-  // Keep full data URLs intact (they include one comma after "base64,").
-  const dataUrlRegex = /data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/g;
-  const dataUrls = text.match(dataUrlRegex) || [];
-  const rest = text.replace(dataUrlRegex, ' ');
-  const urls = rest
-    .split(/[\n,]/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  return [...urls, ...dataUrls];
-}
 
 export default function Products() {
   const [items, setItems] = useState<Product[]>([]);
@@ -89,6 +77,7 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [colorVariants, setColorVariants] = useState<ColorVariant[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -114,18 +103,20 @@ export default function Products() {
     const q = query.trim().toLowerCase();
     if (!q) return items;
     return items.filter((p) =>
-      [p.title, p.category, p.material].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
+      [p.title, p.category, p.material, p.sku].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
     );
   }, [items, query]);
 
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setColorVariants([]);
     setOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p);
+    setColorVariants(p.colors && p.colors.length ? p.colors.map((c) => ({ name: c.name, image: c.image, hex: c.hex || '#000000' })) : []);
     setForm({
       title: p.title || '',
       price: String(p.price ?? ''),
@@ -134,11 +125,9 @@ export default function Products() {
       subcategory: p.subcategory || '',
       material: p.material || '',
       img: p.img || '',
-      imgs: (p.imgs || []).join('\n'),
       rating: String(p.rating ?? ''),
       reviews: String(p.reviews ?? ''),
       badge: p.badge || '',
-      color: p.color || '',
       sizes: (p.sizes || []).join(', '),
       description: p.description || '',
       specDimensions: p.specs?.Dimensions || '',
@@ -154,6 +143,25 @@ export default function Products() {
   const closeModal = () => {
     setOpen(false);
     setSaving(false);
+    setColorVariants([]);
+  };
+
+  const addColorVariant = () => setColorVariants((prev) => [...prev, { ...emptyColor }]);
+
+  const removeColorVariant = (i: number) =>
+    setColorVariants((prev) => prev.filter((_, idx) => idx !== i));
+
+  const updateColorVariant = (i: number, key: keyof ColorVariant, val: string) =>
+    setColorVariants((prev) => prev.map((c, idx) => (idx === i ? { ...c, [key]: val } : c)));
+
+  const handleColorImageUpload = async (i: number, file?: File | null) => {
+    if (!file) return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      updateColorVariant(i, 'image', dataUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process color image');
+    }
   };
 
   const onChange = (key: keyof FormState, val: string | boolean) => {
@@ -200,20 +208,6 @@ export default function Products() {
     }
   };
 
-  const handleGalleryUpload = async (fileList?: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    try {
-      const uploaded = await Promise.all(Array.from(fileList).map((f) => compressImageFile(f)));
-      setForm((prev) => {
-        const existing = parseImageListInput(prev.imgs);
-        return { ...prev, imgs: [...existing, ...uploaded].join('\n') };
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to process gallery images';
-      setError(message);
-    }
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -227,11 +221,11 @@ export default function Products() {
       subcategory: form.subcategory.trim(),
       material: form.material.trim(),
       img: form.img.trim(),
-      imgs: parseImageListInput(form.imgs),
+      imgs: [],
       rating: form.rating ? Number(form.rating) : 0,
       reviews: form.reviews ? Number(form.reviews) : 0,
       badge: form.badge ? form.badge.trim() : null,
-      color: form.color ? form.color.trim() : '',
+      colors: colorVariants.filter((c) => c.name.trim()),
       sizes: form.sizes ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean) : [],
       description: form.description.trim(),
       specs: {
@@ -337,7 +331,10 @@ export default function Products() {
                             <div className="w-full h-full bg-slate-200" />
                           )}
                         </div>
-                        <span className="text-sm font-semibold text-slate-900">{product.title}</span>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">{product.title}</div>
+                          {product.sku && <div className="text-[11px] text-slate-400 font-mono">{product.sku}</div>}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">{product.category}{product.subcategory ? ` / ${product.subcategory}` : ''}</td>
@@ -380,6 +377,10 @@ export default function Products() {
             </div>
             <form className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto" onSubmit={submit}>
               <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">SKU (Serial Number)</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm font-mono bg-slate-50" value={(editing as any)?.sku || 'Auto-generated'} readOnly />
+              </div>
+              <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Title *</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.title} onChange={(e) => onChange('title', e.target.value)} required />
               </div>
@@ -405,7 +406,7 @@ export default function Products() {
                 <select className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.subcategory} onChange={(e) => onChange('subcategory', e.target.value)}>
                   <option value="">Select subcategory</option>
                   {(categories.find((c) => c.name === form.category)?.subcategories || []).map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s.name} value={s.name}>{s.name}{s.serialNumber ? ` (${s.serialNumber})` : ''}</option>
                   ))}
                 </select>
               </div>
@@ -425,24 +426,8 @@ export default function Products() {
                 <div className="text-[11px] text-slate-400 mt-1">Use URL or upload file (auto-compressed)</div>
               </div>
               <div className="col-span-1">
-                <label className="text-xs font-semibold text-slate-500">Gallery URLs (one per line or comma separated)</label>
-                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.imgs} onChange={(e) => onChange('imgs', e.target.value)} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-xs"
-                  onChange={(e) => handleGalleryUpload(e.target.files)}
-                />
-                <div className="text-[11px] text-slate-400 mt-1">Use URLs or upload multiple files (upload format stays valid)</div>
-              </div>
-              <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Badge</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.badge} onChange={(e) => onChange('badge', e.target.value)} placeholder="New, Sale, Popular" />
-              </div>
-              <div className="col-span-1">
-                <label className="text-xs font-semibold text-slate-500">Color</label>
-                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.color} onChange={(e) => onChange('color', e.target.value)} placeholder="e.g. Walnut" />
               </div>
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Rating</label>
@@ -484,6 +469,49 @@ export default function Products() {
                     <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.specWarranty} onChange={(e) => onChange('specWarranty', e.target.value)} />
                   </div>
                 </div>
+              </div>
+
+              {/* Color Variants */}
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-500">Color Variants</label>
+                  <button type="button" onClick={addColorVariant} className="text-xs text-blue-600 hover:underline">+ Add Color</button>
+                </div>
+                {colorVariants.map((cv, i) => (
+                  <div key={i} className="flex items-center gap-2 mb-2 p-2 border border-slate-200 rounded-md">
+                    <input
+                      type="color"
+                      value={cv.hex || '#000000'}
+                      onChange={(e) => updateColorVariant(i, 'hex', e.target.value)}
+                      className="w-9 h-9 rounded cursor-pointer border border-slate-200 p-0.5"
+                      title="Pick color"
+                    />
+                    <input
+                      className="w-24 rounded-md border border-slate-200 px-2 py-1 text-sm font-mono"
+                      placeholder="#000000"
+                      value={cv.hex || ''}
+                      onChange={(e) => updateColorVariant(i, 'hex', e.target.value)}
+                    />
+                    <input
+                      className="w-28 rounded-md border border-slate-200 px-2 py-1 text-sm"
+                      placeholder="Color name"
+                      value={cv.name}
+                      onChange={(e) => updateColorVariant(i, 'name', e.target.value)}
+                    />
+                    {cv.image && (
+                      <img src={cv.image} alt={cv.name} className="w-9 h-9 rounded object-cover border border-slate-200 shrink-0" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="flex-1 text-xs"
+                      onChange={(e) => handleColorImageUpload(i, e.target.files?.[0])}
+                    />
+                    <button type="button" onClick={() => removeColorVariant(i)} className="text-red-500 hover:text-red-700 shrink-0">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
 
               <div className="col-span-2 flex items-center gap-2">

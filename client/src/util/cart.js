@@ -26,7 +26,7 @@ export function setCart(items) {
 
 export function addToCart(item, qty = 1) {
     const cart = getCart();
-    const idx = cart.findIndex((c) => c.id === item.id);
+    const idx = cart.findIndex((c) => c.id === item.id && c.size === item.size && c.color === item.color);
     if (idx >= 0) {
         cart[idx].qty += qty;
         cart[idx].isDeal = !!item.isDeal;
@@ -36,13 +36,15 @@ export function addToCart(item, qty = 1) {
     setCart(cart);
 }
 
-export function updateQty(id, qty) {
-    const cart = getCart().map((c) => (c.id === id ? {...c, qty } : c));
+export function updateQty(id, qty, size, color) {
+    const cart = getCart().map((c) =>
+        c.id === id && c.size === size && c.color === color ? {...c, qty } : c
+    );
     setCart(cart.filter((c) => c.qty > 0));
 }
 
-export function removeFromCart(id) {
-    const cart = getCart().filter((c) => c.id !== id);
+export function removeFromCart(id, size, color) {
+    const cart = getCart().filter((c) => !(c.id === id && c.size === size && c.color === color));
     setCart(cart);
 }
 

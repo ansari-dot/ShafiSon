@@ -45,7 +45,10 @@ export async function getProducts(req, res) {
       return res.json(products.map(normalizeProductDoc));
     }
     const filter = search
-      ? { title: { $regex: String(search).trim(), $options: "i" } }
+      ? { $or: [
+          { title: { $regex: String(search).trim(), $options: "i" } },
+          { sku:   { $regex: String(search).trim(), $options: "i" } },
+        ]}
       : {};
     const products = await Product.find(filter).sort({ createdAt: -1 }).lean();
     return res.json(products.map(normalizeProductDoc));
@@ -69,7 +72,12 @@ export async function getProductById(req, res) {
 
 export async function createProduct(req, res) {
   try {
-    const product = await Product.create(req.body);
+    const body = { ...req.body };
+    if (!body.sku || !String(body.sku).trim()) {
+      const count = await Product.countDocuments();
+      body.sku = `SKU-${String(count + 1).padStart(5, '0')}`;
+    }
+    const product = await Product.create(body);
     return res.status(201).json(normalizeProductDoc(product.toObject()));
   } catch (err) {
     return res.status(400).json({ message: err.message });

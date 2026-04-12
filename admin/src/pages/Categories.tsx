@@ -9,13 +9,13 @@ type Category = {
   name: string;
   count?: number;
   img?: string;
-  subcategories?: string[];
+  subcategories?: { name: string; serialNumber: string }[];
   createdAt?: string;
 };
 
-const emptyForm = { name: '', count: '', img: '', subcategories: '' };
+type Subcat = { name: string; serialNumber: string };
 
-type FormState = typeof emptyForm;
+const emptyForm = { name: '', count: '', img: '' };
 
 export default function Categories() {
   const [items, setItems] = useState<Category[]>([]);
@@ -25,7 +25,8 @@ export default function Categories() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<typeof emptyForm>(emptyForm);
+  const [subcats, setSubcats] = useState<Subcat[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -55,28 +56,27 @@ export default function Categories() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setSubcats([]);
     setOpen(true);
   };
 
   const openEdit = (c: Category) => {
     setEditing(c);
-    setForm({
-      name: c.name || '',
-      count: String(c.count ?? ''),
-      img: c.img || '',
-      subcategories: (c.subcategories || []).join(', '),
-    });
+    setForm({ name: c.name || '', count: String(c.count ?? ''), img: c.img || '' });
+    setSubcats((c.subcategories || []).map((s) => ({ name: s.name || '', serialNumber: s.serialNumber || '' })));
     setOpen(true);
   };
 
-  const closeModal = () => {
-    setOpen(false);
-    setSaving(false);
-  };
+  const closeModal = () => { setOpen(false); setSaving(false); setSubcats([]); };
 
-  const onChange = (key: keyof FormState, val: string) => {
+  const onChange = (key: keyof typeof emptyForm, val: string) => {
     setForm((f) => ({ ...f, [key]: val }));
   };
+
+  const addSubcat = () => setSubcats((p) => [...p, { name: '', serialNumber: '' }]);
+  const removeSubcat = (i: number) => setSubcats((p) => p.filter((_, idx) => idx !== i));
+  const updateSubcat = (i: number, key: keyof Subcat, val: string) =>
+    setSubcats((p) => p.map((s, idx) => (idx === i ? { ...s, [key]: val } : s)));
 
   const compressImageFile = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -132,7 +132,7 @@ export default function Categories() {
       name: form.name.trim(),
       count: form.count ? Number(form.count) : 0,
       img: form.img.trim(),
-      subcategories: form.subcategories ? form.subcategories.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      subcategories: subcats.filter((s) => s.name.trim()).map((s) => ({ name: s.name.trim(), serialNumber: s.serialNumber.trim() })),
     };
 
     try {
@@ -216,7 +216,9 @@ export default function Categories() {
                     <td className="px-6 py-4 text-sm text-slate-600">
                       {(category.subcategories || []).length
                         ? (category.subcategories || []).map((s) => (
-                            <span key={s} className="inline-block bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded mr-1 mb-1">{s}</span>
+                            <span key={s.name} className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-[11px] font-medium px-2 py-0.5 rounded mr-1 mb-1">
+                              {s.name}{s.serialNumber ? <span className="font-mono text-slate-400">#{s.serialNumber}</span> : ''}
+                            </span>
                           ))
                         : <span className="text-slate-400">-</span>}
                     </td>
@@ -263,8 +265,27 @@ export default function Categories() {
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.img} onChange={(e) => onChange('img', e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500">Subcategories (comma separated)</label>
-                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.subcategories} onChange={(e) => onChange('subcategories', e.target.value)} placeholder="e.g. Sofas, Chairs, Tables" />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold text-slate-500">Subcategories</label>
+                  <button type="button" onClick={addSubcat} className="text-xs text-blue-600 hover:underline">+ Add</button>
+                </div>
+                {subcats.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 mb-2">
+                    <input
+                      className="flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                      placeholder="Subcategory name"
+                      value={s.name}
+                      onChange={(e) => updateSubcat(i, 'name', e.target.value)}
+                    />
+                    <input
+                      className="w-28 rounded-md border border-slate-200 px-2 py-1.5 text-sm font-mono"
+                      placeholder="Serial #"
+                      value={s.serialNumber}
+                      onChange={(e) => updateSubcat(i, 'serialNumber', e.target.value)}
+                    />
+                    <button type="button" onClick={() => removeSubcat(i)} className="text-red-500 hover:text-red-700"><X size={14} /></button>
+                  </div>
+                ))}
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">Upload Image File</label>

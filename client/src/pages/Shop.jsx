@@ -217,6 +217,7 @@ export default function Shop() {
   const [category,     setCategory]     = useState("All");
   const [subcategory,  setSubcategory]  = useState("All");
   const [material,     setMaterial]     = useState("All");
+  const [color,        setColor]        = useState("All");
   const [minPrice,     setMinPrice]     = useState(0);
   const [maxPrice,     setMaxPrice]     = useState(0);
   const [minRating,    setMinRating]    = useState(0);
@@ -319,6 +320,12 @@ export default function Shop() {
     return ["All", ...Array.from(set)];
   }, [items]);
 
+  const COLORS = useMemo(() => {
+    const set = new Set();
+    items.forEach(p => (p.colors || []).forEach(c => { if (c.name) set.add(c.name); }));
+    return ["All", ...Array.from(set)];
+  }, [items]);
+
   useEffect(() => {
     if (queryCategory && CATEGORIES.includes(queryCategory)) {
       setCategory(queryCategory);
@@ -333,6 +340,7 @@ export default function Shop() {
     } else if (!queryMaterial) {
       setMaterial("All");
     }
+    setColor("All");
 
     if (querySort && SORT_OPTIONS.some((option) => option.value === querySort)) {
       setSort(querySort);
@@ -363,18 +371,20 @@ export default function Shop() {
     if (category !== "All") list = list.filter(p => p.category === category);
     if (subcategory !== "All") list = list.filter(p => p.subcategory === subcategory);
     if (material !== "All") list = list.filter(p => p.material === material);
+    if (color !== "All") list = list.filter(p => (p.colors || []).some(c => c.name === color));
     list = list.filter(p => p.price <= maxPrice && p.price >= minPrice && (p.rating || 0) >= minRating);
     if (sort === "price_asc")  list.sort((a, b) => a.price - b.price);
     if (sort === "price_desc") list.sort((a, b) => b.price - a.price);
     if (sort === "rating")     list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (sort === "reviews")    list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     return list;
-  }, [items, category, material, minPrice, maxPrice, minRating, sort]);
+  }, [items, category, subcategory, material, color, minPrice, maxPrice, minRating, sort]);
 
   const resetAll = () => {
     setCategory("All");
     setSubcategory("All");
     setMaterial("All");
+    setColor("All");
     const prices = items.map(p => Number(p.price || 0)).filter(p => !Number.isNaN(p));
     const min = prices.length ? Math.min(...prices) : 0;
     const max = prices.length ? Math.max(...prices) : 0;
@@ -387,6 +397,7 @@ export default function Shop() {
     category    !== "All" && { key: "cat",    label: category,             clear: () => { setCategory("All"); setSubcategory("All"); } },
     subcategory !== "All" && { key: "subcat", label: subcategory,          clear: () => setSubcategory("All") },
     material    !== "All" && { key: "mat",    label: material,             clear: () => setMaterial("All")  },
+    color       !== "All" && { key: "color",  label: color,                clear: () => setColor("All")     },
     maxPrice  >  0      && { key: "price",  label: `Up to ${formatPKR(maxPrice)}`, clear: () => setMaxPrice(Math.max(...items.map(p => p.price || 0)))  },
     minRating >  0      && { key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0)     },
   ].filter(Boolean);
@@ -433,6 +444,31 @@ export default function Shop() {
               <span className="sp-check-label">{s}</span>
               <span className="sp-check-count">
                 {items.filter(p => p.category === category && p.subcategory === s).length}
+              </span>
+            </label>
+          ))}
+        </FilterGroup>
+      )}
+
+      {COLORS.length > 1 && (
+        <FilterGroup title="Color">
+          {COLORS.map(c => (
+            <label key={c} className="sp-check-row">
+              <input type="radio" name="color" checked={color === c}
+                onChange={() => setColor(c)} className="sp-radio" />
+              <span className="sp-check-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {c !== "All" && (() => {
+                  const variant = items.flatMap(p => p.colors || []).find(cv => cv.name === c);
+                  return variant?.hex
+                    ? <span style={{ width: 14, height: 14, borderRadius: "50%", background: variant.hex, display: "inline-block", flexShrink: 0, border: "1px solid rgba(0,0,0,0.15)" }} />
+                    : variant?.image
+                      ? <img src={variant.image} alt={c} style={{ width: 18, height: 18, objectFit: "cover", borderRadius: 2, border: "1px solid #d8cebf", flexShrink: 0 }} />
+                      : <span style={{ width: 14, height: 14, borderRadius: "50%", background: "#d8cebf", display: "inline-block", flexShrink: 0 }} />;
+                })()}
+                {c}
+              </span>
+              <span className="sp-check-count">
+                {c === "All" ? items.length : items.filter(p => (p.colors || []).some(cv => cv.name === c)).length}
               </span>
             </label>
           ))}

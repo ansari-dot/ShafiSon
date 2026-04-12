@@ -8,6 +8,11 @@ const orderItemSchema = new mongoose.Schema(
     unitPrice: { type: Number, required: true },
     originalPrice: { type: Number, default: 0 },
     isDeal: { type: Boolean, default: false },
+    size: { type: String, default: '' },
+    color: { type: String, default: '' },
+    colorHex: { type: String, default: '' },
+    sku: { type: String, default: '' },
+    subcategorySerial: { type: String, default: '' },
   },
   { _id: false }
 );

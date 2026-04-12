@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
+    sku: { type: String, unique: true, sparse: true, default: '' },
     title: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, default: 0 },
@@ -24,6 +25,10 @@ const productSchema = new mongoose.Schema({
     },
 
     inStock: { type: Boolean, default: true },
+    colors: {
+        type: [{ name: { type: String }, image: { type: String }, hex: { type: String, default: '' } }],
+        default: [],
+    },
 }, { timestamps: true });
 
 export default mongoose.model("Product", productSchema);
