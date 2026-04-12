@@ -8,12 +8,14 @@ import { formatPKR } from '@/src/lib/formatCurrency';
 type Category = {
   _id: string;
   name: string;
+  subcategories?: string[];
 };
 
 type Product = {
   _id: string;
   title: string;
   category: string;
+  subcategory?: string;
   price: number;
   quantity?: number;
   inStock: boolean;
@@ -41,6 +43,7 @@ const emptyForm = {
   price: '',
   quantity: '',
   category: '',
+  subcategory: '',
   material: '',
   img: '',
   imgs: '',
@@ -128,6 +131,7 @@ export default function Products() {
       price: String(p.price ?? ''),
       quantity: String(p.quantity ?? ''),
       category: p.category || '',
+      subcategory: p.subcategory || '',
       material: p.material || '',
       img: p.img || '',
       imgs: (p.imgs || []).join('\n'),
@@ -220,6 +224,7 @@ export default function Products() {
       price: Number(form.price),
       quantity: form.quantity ? Number(form.quantity) : 0,
       category: form.category.trim(),
+      subcategory: form.subcategory.trim(),
       material: form.material.trim(),
       img: form.img.trim(),
       imgs: parseImageListInput(form.imgs),
@@ -335,7 +340,7 @@ export default function Products() {
                         <span className="text-sm font-semibold text-slate-900">{product.title}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{product.category}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{product.category}{product.subcategory ? ` / ${product.subcategory}` : ''}</td>
                     <td className="px-6 py-4 text-sm font-semibold text-slate-900">{formatPKR(product.price)}</td>
                     <td className="px-6 py-4 text-sm text-slate-600">{product.quantity ?? 0}</td>
                     <td className="px-6 py-4">
@@ -388,10 +393,19 @@ export default function Products() {
               </div>
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Category *</label>
-                <select className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.category} onChange={(e) => onChange('category', e.target.value)} required>
+                <select className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.category} onChange={(e) => { onChange('category', e.target.value); onChange('subcategory', ''); }} required>
                   <option value="">Select category</option>
                   {categories.map((c) => (
                     <option key={c._id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Subcategory</label>
+                <select className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.subcategory} onChange={(e) => onChange('subcategory', e.target.value)}>
+                  <option value="">Select subcategory</option>
+                  {(categories.find((c) => c.name === form.category)?.subcategories || []).map((s) => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 
@@ -13,9 +13,9 @@ function useCountdown(targetDate) {
       secs: Math.floor((diff % 60000) / 1000),
     };
   };
+
   const [time, setTime] = useState(() => calc(targetDate));
   useEffect(() => {
-    setTime(calc(targetDate));
     const id = setInterval(() => setTime(calc(targetDate)), 1000);
     return () => clearInterval(id);
   }, [targetDate]);
@@ -27,7 +27,7 @@ export default function DealBanner() {
   const hasDeadline = !!deal?.endsAt && !Number.isNaN(new Date(deal.endsAt).getTime());
   const deadline = hasDeadline ? new Date(deal.endsAt).getTime() : 0;
   const { days, hours, mins, secs } = useCountdown(deadline);
-  const showCountdown = hasDeadline && deadline > Date.now();
+  const showCountdown = hasDeadline && days + hours + mins + secs > 0;
 
   useEffect(() => {
     let active = true;
@@ -40,64 +40,85 @@ export default function DealBanner() {
         if (!active) return;
         setDeal(null);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const renderDiscount = () => {
+  const discountNode = (() => {
     const type = deal?.discountType || "percent";
     const value = typeof deal?.discountValue === "number" ? deal.discountValue : 0;
     if (type === "none") return null;
-    if (type === "amount") {
-      return <span className="text-accent">{formatPKR(value)} Off</span>;
-    }
-    return <span className="text-accent">{value}% Off</span>;
-  };
+    if (type === "amount") return <span className="deal-accent">{formatPKR(value)} OFF</span>;
+    return <span className="deal-accent">{value}% OFF</span>;
+  })();
 
   return (
-    <section className="deal-banner section-pad">
+    <section className="deal-banner deal-banner-modern section-pad">
       <div className="container">
-        <div className="row align-items-center g-4">
-          <div className="col-lg-6">
-            <span className="section-label">{deal?.title || "Limited Offer"}</span>
-            <h2 className="fs-2 fw-bold text-dark mt-2 mb-3">
-              {renderDiscount() ? (
+        <div className="deal-modern-shell">
+          <div className="deal-modern-left">
+            <div className="deal-modern-kicker">
+              <span className="section-label">{deal?.title || "Limited Offer"}</span>
+              {discountNode && <span className="deal-modern-chip">Limited • {discountNode}</span>}
+            </div>
+
+            <h2 className="deal-modern-title">
+              {discountNode ? (
                 <>
-                  Up to {renderDiscount()} on
+                  Premium picks.
                   <br />
-                  Selected Furniture
+                  <span className="deal-modern-title-strong">Save big today.</span>
                 </>
               ) : (
-                <>
-                  {deal?.heading || "Grab the Deal"}
-                </>
+                <>{deal?.heading || "Grab the Deal"}</>
               )}
             </h2>
-            <p className="mb-4">
-              {deal?.text || "Upgrade your living space with our premium collection. Handcrafted pieces built to last a lifetime — at prices you'll love."}
+
+            <p className="deal-modern-text">
+              {deal?.text ||
+                "Upgrade your living space with premium collections - crafted to feel expensive, priced to feel smart."}
             </p>
-            <a href="/shop?deal=1" className="btn-accent d-inline-block">
-              Grab the Deal
-            </a>
-          </div>
-          <div className="col-lg-6">
-            <div className="deal-countdown">
-              {[
-                { val: days, label: "Days" },
-                { val: hours, label: "Hours" },
-                { val: mins, label: "Minutes" },
-                { val: secs, label: "Seconds" },
-              ].map(({ val, label }) => (
-                <div className="countdown-block" key={label}>
-                  <span className="countdown-num">{showCountdown ? String(val).padStart(2, "0") : "--"}</span>
-                  <span className="countdown-label">{label}</span>
-                </div>
-              ))}
+
+            <div className="deal-modern-actions">
+              <a href="/shop?deal=1" className="btn-dark d-inline-flex align-items-center gap-2">
+                Grab the Deal <span aria-hidden="true">→</span>
+              </a>
+              <a href="/shop" className="deal-modern-link">
+                Explore all products
+              </a>
             </div>
-            {!showCountdown && (
-              <div className="small text-muted mt-2">
-                {hasDeadline ? "Deal time ended." : "Set deal end time in Admin ? Content ? Deal Section."}
-              </div>
+
+            {hasDeadline && (
+              <div className="deal-modern-note">{showCountdown ? "Hurry up - offer ends soon." : "This offer has ended."}</div>
             )}
+          </div>
+
+          <div className="deal-modern-right">
+            <div className="deal-modern-panel" aria-label="Deal countdown">
+              <div className="deal-modern-panel-top">
+                <div className="deal-modern-panel-title">Deal ends in</div>
+                <div className="deal-modern-panel-sub">
+                  {showCountdown ? "Don’t miss it." : hasDeadline ? "Deal time ended." : "Set a new deal end time in Admin."}
+                </div>
+              </div>
+
+              <div className="deal-countdown deal-countdown-modern">
+                {[
+                  { val: days, label: "Days" },
+                  { val: hours, label: "Hours" },
+                  { val: mins, label: "Minutes" },
+                  { val: secs, label: "Seconds" },
+                ].map(({ val, label }) => (
+                  <div className="countdown-block countdown-block-modern" key={label}>
+                    <span className="countdown-num">{showCountdown ? String(val).padStart(2, "0") : "--"}</span>
+                    <span className="countdown-label">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {!hasDeadline && <div className="deal-modern-help">Admin → Content → Deal Section</div>}
+            </div>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ const emptyForm = {
   title: "",
   price: "",
   category: "",
+  subcategory: "",
   material: "",
   img: "",
   imgs: "",
@@ -59,6 +60,7 @@ export default function AdminProducts() {
       title: form.title.trim(),
       price: Number(form.price),
       category: form.category.trim(),
+      subcategory: form.subcategory.trim(),
       material: form.material.trim(),
       img: form.img.trim(),
       imgs: form.imgs ? form.imgs.split(",").map((s) => s.trim()).filter(Boolean) : [],
@@ -109,12 +111,21 @@ export default function AdminProducts() {
                 <input className="form-control" value={form.material} onChange={(e) => onChange("material", e.target.value)} required />
               </div>
 
-              <div className="col-md-6">
+              <div className="col-md-3">
                 <label className="form-label">Category *</label>
-                <select className="form-select" value={form.category} onChange={(e) => onChange("category", e.target.value)} required>
+                <select className="form-select" value={form.category} onChange={(e) => { onChange("category", e.target.value); onChange("subcategory", ""); }} required>
                   <option value="">Select category</option>
                   {categories.map((c) => (
                     <option key={c._id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Subcategory</label>
+                <select className="form-select" value={form.subcategory} onChange={(e) => onChange("subcategory", e.target.value)}>
+                  <option value="">Select subcategory</option>
+                  {(categories.find((c) => c.name === form.category)?.subcategories || []).map((s) => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
               </div>
@@ -184,7 +195,7 @@ export default function AdminProducts() {
                   {items.map((p) => (
                     <tr key={p._id}>
                       <td className="py-3 text-dark">{p.title}</td>
-                      <td className="py-3 text-muted">{p.category}</td>
+                      <td className="py-3 text-muted">{p.category}{p.subcategory ? ` / ${p.subcategory}` : ""}</td>
                       <td className="py-3 text-dark">{formatPKR(p.price)}</td>
                       <td className="py-3">
                         <span className={p.inStock ? "badge text-bg-success" : "badge text-bg-secondary"}>

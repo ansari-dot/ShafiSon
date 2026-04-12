@@ -195,6 +195,10 @@ export default function Shop() {
     const params = new URLSearchParams(location.search);
     return (params.get("category") || "").trim();
   }, [location.search]);
+  const querySubcategory = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (params.get("subcategory") || "").trim();
+  }, [location.search]);
   const queryMaterial = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return (params.get("material") || "").trim();
@@ -205,11 +209,13 @@ export default function Shop() {
   }, [location.search]);
 
   const [items, setItems] = useState([]);
+  const [categoryDocs, setCategoryDocs] = useState([]);
   const [deal, setDeal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [category,     setCategory]     = useState("All");
+  const [subcategory,  setSubcategory]  = useState("All");
   const [material,     setMaterial]     = useState("All");
   const [minPrice,     setMinPrice]     = useState(0);
   const [maxPrice,     setMaxPrice]     = useState(0);
@@ -269,6 +275,12 @@ export default function Shop() {
     return () => { active = false; };
   }, [isDealPage, queryText]);
 
+  useEffect(() => {
+    apiGet("/api/categories").then((data) => {
+      setCategoryDocs(Array.isArray(data) ? data : []);
+    }).catch(() => {});
+  }, []);
+
   const isDealActive = (d) => {
     if (!d) return false;
     if (!d.endsAt) return false;
@@ -291,6 +303,17 @@ export default function Shop() {
     return ["All", ...Array.from(set)];
   }, [items]);
 
+  const SUBCATEGORIES = useMemo(() => {
+    if (category === "All") return [];
+    const doc = categoryDocs.find(c => c.name === category);
+    if (doc?.subcategories?.length) return doc.subcategories;
+    // fallback: derive from product data
+    const set = new Set(
+      items.filter(p => p.category === category && p.subcategory).map(p => p.subcategory)
+    );
+    return Array.from(set);
+  }, [categoryDocs, category, items]);
+
   const MATERIALS = useMemo(() => {
     const set = new Set(items.map(p => p.material).filter(Boolean));
     return ["All", ...Array.from(set)];
@@ -299,8 +322,10 @@ export default function Shop() {
   useEffect(() => {
     if (queryCategory && CATEGORIES.includes(queryCategory)) {
       setCategory(queryCategory);
+      setSubcategory(querySubcategory || "All");
     } else if (!queryCategory) {
       setCategory("All");
+      setSubcategory("All");
     }
 
     if (queryMaterial && MATERIALS.includes(queryMaterial)) {
@@ -314,7 +339,7 @@ export default function Shop() {
     } else if (!querySort) {
       setSort("featured");
     }
-  }, [queryCategory, queryMaterial, querySort, CATEGORIES, MATERIALS]);
+  }, [queryCategory, querySubcategory, queryMaterial, querySort, CATEGORIES, MATERIALS]);
 
   useEffect(() => {
     const updateWished = () => setWished(getWishlist().map((item) => item.id));
@@ -336,6 +361,7 @@ export default function Shop() {
   const filtered = useMemo(() => {
     let list = [...items];
     if (category !== "All") list = list.filter(p => p.category === category);
+    if (subcategory !== "All") list = list.filter(p => p.subcategory === subcategory);
     if (material !== "All") list = list.filter(p => p.material === material);
     list = list.filter(p => p.price <= maxPrice && p.price >= minPrice && (p.rating || 0) >= minRating);
     if (sort === "price_asc")  list.sort((a, b) => a.price - b.price);
@@ -347,6 +373,7 @@ export default function Shop() {
 
   const resetAll = () => {
     setCategory("All");
+    setSubcategory("All");
     setMaterial("All");
     const prices = items.map(p => Number(p.price || 0)).filter(p => !Number.isNaN(p));
     const min = prices.length ? Math.min(...prices) : 0;
@@ -357,8 +384,9 @@ export default function Shop() {
   };
 
   const activeTags = [
-    category  !== "All" && { key: "cat",    label: category,          clear: () => setCategory("All")  },
-    material  !== "All" && { key: "mat",    label: material,          clear: () => setMaterial("All")  },
+    category    !== "All" && { key: "cat",    label: category,             clear: () => { setCategory("All"); setSubcategory("All"); } },
+    subcategory !== "All" && { key: "subcat", label: subcategory,          clear: () => setSubcategory("All") },
+    material    !== "All" && { key: "mat",    label: material,             clear: () => setMaterial("All")  },
     maxPrice  >  0      && { key: "price",  label: `Up to ${formatPKR(maxPrice)}`, clear: () => setMaxPrice(Math.max(...items.map(p => p.price || 0)))  },
     minRating >  0      && { key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0)     },
   ].filter(Boolean);
@@ -381,7 +409,7 @@ export default function Shop() {
         {CATEGORIES.map(c => (
           <label key={c} className="sp-check-row">
             <input type="radio" name="cat" checked={category === c}
-              onChange={() => setCategory(c)} className="sp-radio" />
+              onChange={() => { setCategory(c); setSubcategory("All"); }} className="sp-radio" />
             <span className="sp-check-label">{c}</span>
             <span className="sp-check-count">
               {c === "All" ? items.length : items.filter(p => p.category === c).length}
@@ -389,6 +417,27 @@ export default function Shop() {
           </label>
         ))}
       </FilterGroup>
+
+      {category !== "All" && SUBCATEGORIES.length > 0 && (
+        <FilterGroup title="Subcategory">
+          <label className="sp-check-row">
+            <input type="radio" name="subcat" checked={subcategory === "All"}
+              onChange={() => setSubcategory("All")} className="sp-radio" />
+            <span className="sp-check-label">All</span>
+            <span className="sp-check-count">{items.filter(p => p.category === category).length}</span>
+          </label>
+          {SUBCATEGORIES.map(s => (
+            <label key={s} className="sp-check-row">
+              <input type="radio" name="subcat" checked={subcategory === s}
+                onChange={() => setSubcategory(s)} className="sp-radio" />
+              <span className="sp-check-label">{s}</span>
+              <span className="sp-check-count">
+                {items.filter(p => p.category === category && p.subcategory === s).length}
+              </span>
+            </label>
+          ))}
+        </FilterGroup>
+      )}
 
       <FilterGroup title="Material">
         {MATERIALS.map(m => (

@@ -1,71 +1,52 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiGet } from "../util/api";
 
 export default function Categories() {
   const [items, setItems] = useState([]);
-  const [section, setSection] = useState(null);
 
   useEffect(() => {
     let active = true;
-    apiGet("/api/home-categories")
-      .then((doc) => {
+    apiGet("/api/categories")
+      .then((list) => {
         if (!active) return;
-        if (doc && doc.categoryIds && doc.categoryIds.length) {
-          setSection(doc);
-          apiGet(`/api/categories?ids=${doc.categoryIds.join(",")}`)
-            .then((list) => {
-              if (!active) return;
-              setItems(Array.isArray(list) ? list : []);
-            })
-            .catch(() => {
-              if (!active) return;
-              setItems([]);
-            });
-        } else {
-          setSection(null);
-          apiGet("/api/categories")
-            .then((list) => {
-              if (!active) return;
-              setItems(Array.isArray(list) ? list.slice(0, 3) : []);
-            })
-            .catch(() => {
-              if (!active) return;
-              setItems([]);
-            });
-        }
+        setItems(Array.isArray(list) ? list : []);
       })
       .catch(() => {
         if (!active) return;
-        setSection(null);
         setItems([]);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (!items.length) return null;
+  const movingItems = [...items, ...items];
 
   return (
-    <section className="section-pad pb-0">
+    <section className="section-pad pb-0 categories-showcase">
       <div className="container">
-        <div className="section-heading text-center mb-5">
-          <span className="section-label">{section?.title || "Browse"}</span>
-          <h2 className="fs-2 fw-bold text-dark mt-1">{section?.heading || "Shop by Category"}</h2>
-          <p className="mt-2">{section?.text || "Find the perfect piece for every room in your home."}</p>
+        <div className="section-heading text-center mb-4">
+          <span className="section-label">Browse</span>
+          <h2 className="fs-2 fw-bold text-dark mt-1">Shop by Category</h2>
+          <p className="mt-2 mb-0">Find the perfect piece for every room in your home.</p>
         </div>
-        <div className="row g-4">
-          {items.map((cat) => (
-            <div className="col-6 col-md-3" key={cat._id}>
-              <a href="/shop" className="category-card">
-                <div className="category-card-img">
-                  <img src={cat.img} alt={cat.name} className="img-fluid" />
+
+        <div className="categories-orb-marquee" aria-label="Shop categories">
+          <div className="categories-orb-track">
+            {movingItems.map((cat, index) => (
+              <a href="/shop" className="category-orb" key={`${cat._id}-${index}`}>
+                <div className="category-orb-media">
+                  <img src={cat.img} alt={cat.name} className="img-fluid" loading="lazy" />
+                  <span className="category-orb-glow" aria-hidden="true" />
                 </div>
-                <div className="category-card-body">
+                <div className="category-orb-body">
                   <h3 className="fs-6 fw-semibold text-dark mb-0">{cat.name}</h3>
-                  <span className="small text-muted">{cat.count} items</span>
+                  <span className="small text-muted">{cat.count || 0} items</span>
                 </div>
               </a>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

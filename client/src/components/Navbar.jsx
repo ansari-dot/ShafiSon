@@ -50,6 +50,7 @@ export default function Navbar() {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
   const [megaItems, setMegaItems] = useState([]);
+  const [megaCategoryDocs, setMegaCategoryDocs] = useState([]);
 
   const makeShopLink = (key, value) => {
     const params = new URLSearchParams();
@@ -67,14 +68,21 @@ export default function Navbar() {
     }, {});
 
     return Object.entries(counts)
-      .map(([label, count]) => ({
-        label,
-        count,
-        to: makeShopLink("category", label),
-      }))
+      .map(([label, count]) => {
+        const doc = megaCategoryDocs.find(c => c.name === label);
+        const subcategories = (
+          doc?.subcategories?.length
+            ? doc.subcategories
+            : [...new Set(source.filter(p => (p?.category || '').trim() === label && p?.subcategory).map(p => p.subcategory))]
+        ).map(s => ({
+          label: s,
+          to: `/shop?category=${encodeURIComponent(label)}&subcategory=${encodeURIComponent(s)}`,
+        }));
+        return { label, count, to: makeShopLink("category", label), subcategories };
+      })
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
       .slice(0, 5);
-  }, [megaItems]);
+  }, [megaItems, megaCategoryDocs]);
 
   const megaMaterials = useMemo(() => {
     const source = megaItems.length ? megaItems : localShopProducts;
@@ -147,6 +155,12 @@ export default function Navbar() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    apiGet("/api/categories").then((data) => {
+      setMegaCategoryDocs(Array.isArray(data) ? data : []);
+    }).catch(() => {});
   }, []);
 
   const handleNavClick = () => setOpen(false);
@@ -251,11 +265,22 @@ export default function Navbar() {
                               </Link>
                             </li>
                             {megaCategories.map((cat) => (
-                              <li key={cat.label}>
+                              <li key={cat.label} className="nb-mega-cat-item">
                                 <Link to={cat.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
                                   <span>{cat.label}</span>
                                   <small>{cat.count}</small>
                                 </Link>
+                                {cat.subcategories && cat.subcategories.length > 0 && (
+                                  <ul className="nb-mega-sublist">
+                                    {cat.subcategories.map((sub) => (
+                                      <li key={sub.label}>
+                                        <Link to={sub.to} className="nb-mega-sublink" onClick={() => setMegaOpen(false)}>
+                                          {sub.label}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
                               </li>
                             ))}
                           </ul>

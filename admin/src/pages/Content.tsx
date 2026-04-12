@@ -1,4 +1,4 @@
-﻿
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame, Users } from 'lucide-react';
@@ -115,7 +115,7 @@ export default function Content() {
   const [form, setForm] = useState<HomeCollection>({
     title: 'Our Collection',
     heading: 'Crafted with Excellent Material',
-    text: 'Every piece is designed with care — using sustainably sourced wood, premium fabrics, and timeless craftsmanship.',
+    text: 'Every piece is designed with care � using sustainably sourced wood, premium fabrics, and timeless craftsmanship.',
     productIds: [],
   });
 
@@ -149,6 +149,8 @@ export default function Content() {
     discountValue: 50,
     endsAt: null,
   });
+
+
 
   const [teamForm, setTeamForm] = useState<AboutTeamSection>({
     title: 'The People',
@@ -276,6 +278,8 @@ export default function Content() {
     if (!q) return categories;
     return categories.filter((c) => c.name.toLowerCase().includes(q));
   }, [categories, catSearch]);
+
+
 
   const filteredDealProducts = useMemo(() => {
     const q = dealSearch.trim().toLowerCase();
