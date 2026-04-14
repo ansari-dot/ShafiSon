@@ -23,8 +23,8 @@ import { connectDB } from "./config/db.js";
 dotenv.config();
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: false, limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 const allowedOrigins = [
         process.env.CORS_ORIGINS, // e.g. "http://a.com,http://b.com"
         process.env.CLIENT_URL, // e.g. "http://localhost:5173"
