@@ -40,6 +40,12 @@ const CloseIcon = () => (
   </svg>
 );
 
+const ChevronDownIcon = ({ open = false }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+  </svg>
+);
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,6 +57,7 @@ export default function Navbar() {
   const [megaOpen, setMegaOpen] = useState(false);
   const [megaItems, setMegaItems] = useState([]);
   const [megaCategoryDocs, setMegaCategoryDocs] = useState([]);
+  const [openCategory, setOpenCategory] = useState(null);
 
   const makeShopLink = (key, value) => {
     const params = new URLSearchParams();
@@ -104,7 +111,9 @@ export default function Navbar() {
   }, [megaItems]);
 
   const megaShortcuts = [
+    { label: "Featured", to: "/shop" },
     { label: "Top Rated", to: "/shop?sort=rating" },
+    { label: "Most Reviewed", to: "/shop?sort=reviews" },
     { label: "Price: Low to High", to: "/shop?sort=price_asc" },
     { label: "Price: High to Low", to: "/shop?sort=price_desc" },
     { label: "Deals", to: "/shop?deal=1" },
@@ -121,6 +130,10 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!megaOpen) setOpenCategory(null);
+  }, [megaOpen]);
 
   useEffect(() => {
     const update = () => {
@@ -264,25 +277,45 @@ export default function Navbar() {
                                 <small>{(megaItems.length ? megaItems : localShopProducts).length}</small>
                               </Link>
                             </li>
-                            {megaCategories.map((cat) => (
-                              <li key={cat.label} className="nb-mega-cat-item">
-                                <Link to={cat.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
-                                  <span>{cat.label}</span>
-                                  <small>{cat.count}</small>
-                                </Link>
-                                {cat.subcategories && cat.subcategories.length > 0 && (
-                                  <ul className="nb-mega-sublist">
-                                    {cat.subcategories.map((sub) => (
-                                      <li key={sub.label}>
-                                        <Link to={sub.to} className="nb-mega-sublink" onClick={() => setMegaOpen(false)}>
-                                          {sub.label}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </li>
-                            ))}
+                            {megaCategories.map((cat) => {
+                              const isOpen = openCategory === cat.label;
+                              return (
+                                <li key={cat.label} className={`nb-mega-cat-item${isOpen ? " nb-mega-cat-open" : ""}`}>
+                                  <div className="nb-mega-cat-heading">
+                                    <Link to={cat.to} className="nb-mega-link" onClick={() => setMegaOpen(false)}>
+                                      <span>{cat.label}</span>
+                                      <small>{cat.count}</small>
+                                    </Link>
+                                    {cat.subcategories && cat.subcategories.length > 0 && (
+                                      <button
+                                        type="button"
+                                        className={`nb-mega-cat-toggle${isOpen ? " open" : ""}`}
+                                        aria-expanded={isOpen}
+                                        aria-label={`${isOpen ? "Hide" : "Show"} ${cat.label} subcategories`}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setOpenCategory(isOpen ? null : cat.label);
+                                        }}
+                                      >
+                                        <ChevronDownIcon open={isOpen} />
+                                      </button>
+                                    )}
+                                  </div>
+                                  {cat.subcategories && cat.subcategories.length > 0 && (
+                                    <ul className="nb-mega-sublist">
+                                      {cat.subcategories.map((sub) => (
+                                        <li key={sub.label}>
+                                          <Link to={sub.to} className="nb-mega-sublink" onClick={() => setMegaOpen(false)}>
+                                            {sub.label}
+                                          </Link>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
 
@@ -313,14 +346,6 @@ export default function Navbar() {
                           </ul>
                         </div>
 
-                        <div className="nb-mega-feature">
-                          <span className="nb-mega-kicker">Spring Edit</span>
-                          <h4>Crafted Comfort for Every Room</h4>
-                          <p>Discover premium furniture collections with clean lines, timeless textures, and everyday comfort.</p>
-                          <Link to="/shop" className="nb-mega-cta" onClick={() => setMegaOpen(false)}>
-                            Explore All Products
-                          </Link>
-                        </div>
                       </div>
                     </div>
                   )}

@@ -174,7 +174,7 @@ export default function Content() {
       apiGet<HomeCategories | null>('/api/home-categories'),
       apiGet<DealSection | null>('/api/deal-section'),
       apiGet<AboutTeamSection | null>('/api/about-team'),
-      apiGet<Product[]>('/api/products'),
+      apiGet<{ products: Product[]; total: number } | Product[]>('/api/products?limit=1000'),
       apiGet<Category[]>('/api/categories')
     ])
       .then(([heroDoc, doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList]) => {
@@ -245,7 +245,7 @@ export default function Content() {
             members: Array.isArray(teamDoc.members) ? teamDoc.members : [],
           });
         }
-        setProducts(Array.isArray(list) ? list : []);
+        setProducts(Array.isArray(list) ? list : (list as { products: Product[] }).products || []);
         setCategories(Array.isArray(catList) ? catList : []);
       })
       .catch((err: Error) => {

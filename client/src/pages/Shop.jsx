@@ -227,8 +227,16 @@ export default function Shop() {
   const [subcategory,  setSubcategory]  = useState("All");
   const [material,     setMaterial]     = useState("All");
   const [color,        setColor]        = useState("All");
+  const [size,         setSize]         = useState("All");
+  const [badge,        setBadge]        = useState("All");
+  const [inStock,      setInStock]      = useState(false);
+  const [dealsOnly,    setDealsOnly]    = useState(false);
+  const [newOnly,      setNewOnly]      = useState(false);
+  const [minDiscount,  setMinDiscount]  = useState(0);
   const [minPrice,     setMinPrice]     = useState(0);
   const [maxPrice,     setMaxPrice]     = useState(0);
+  const [priceFloor,   setPriceFloor]   = useState(0);
+  const [priceCeil,    setPriceCeil]    = useState(0);
   const [minRating,    setMinRating]    = useState(0);
   const [sort,         setSort]         = useState("featured");
   const [view,         setView]         = useState("grid");
@@ -271,6 +279,8 @@ export default function Shop() {
         const max = prices.length ? Math.max(...prices) : 0;
         setMinPrice(min);
         setMaxPrice(max || 0);
+        setPriceFloor(min);
+        setPriceCeil(max || 0);
         setError("");
       } catch (err) {
         if (!active) return;
@@ -316,7 +326,7 @@ export default function Shop() {
   const SUBCATEGORIES = useMemo(() => {
     if (category === "All") return [];
     const doc = categoryDocs.find(c => c.name === category);
-    if (doc?.subcategories?.length) return doc.subcategories;
+    if (doc?.subcategories?.length) return doc.subcategories.map(s => s.name || s);
     // fallback: derive from product data
     const set = new Set(
       items.filter(p => p.category === category && p.subcategory).map(p => p.subcategory)
@@ -326,6 +336,17 @@ export default function Shop() {
 
   const MATERIALS = useMemo(() => {
     const set = new Set(items.map(p => p.material).filter(Boolean));
+    return ["All", ...Array.from(set)];
+  }, [items]);
+
+  const SIZES = useMemo(() => {
+    const set = new Set();
+    items.forEach(p => (p.sizes || []).forEach(s => { if (s) set.add(s); }));
+    return ["All", ...Array.from(set)];
+  }, [items]);
+
+  const BADGES = useMemo(() => {
+    const set = new Set(items.map(p => p.badge).filter(Boolean));
     return ["All", ...Array.from(set)];
   }, [items]);
 
@@ -381,24 +402,39 @@ export default function Shop() {
     if (subcategory !== "All") list = list.filter(p => p.subcategory === subcategory);
     if (material !== "All") list = list.filter(p => p.material === material);
     if (color !== "All") list = list.filter(p => (p.colors || []).some(c => c.name === color));
+    if (size !== "All") list = list.filter(p => (p.sizes || []).includes(size));
+    if (badge !== "All") list = list.filter(p => p.badge === badge);
+    if (inStock) list = list.filter(p => p.inStock !== false && Number(p.quantity || 0) > 0);
+    if (dealsOnly) list = list.filter(p => p.isDeal);
+    if (newOnly) list = list.filter(p => p.badge?.toLowerCase() === "new");
+    if (minDiscount > 0) list = list.filter(p => {
+      if (!isDealActive(deal) || !p.isDeal) return false;
+      const orig = Number(p.price || 0);
+      if (!orig) return false;
+      const discounted = getDealPrice(orig, deal);
+      return Math.round(((orig - discounted) / orig) * 100) >= minDiscount;
+    });
     list = list.filter(p => p.price <= maxPrice && p.price >= minPrice && (p.rating || 0) >= minRating);
     if (sort === "price_asc")  list.sort((a, b) => a.price - b.price);
     if (sort === "price_desc") list.sort((a, b) => b.price - a.price);
     if (sort === "rating")     list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (sort === "reviews")    list.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     return list;
-  }, [items, category, subcategory, material, color, minPrice, maxPrice, minRating, sort]);
+  }, [items, category, subcategory, material, color, size, badge, inStock, dealsOnly, newOnly, minDiscount, minPrice, maxPrice, minRating, sort, deal]);
 
   const resetAll = () => {
     setCategory("All");
     setSubcategory("All");
     setMaterial("All");
     setColor("All");
-    const prices = items.map(p => Number(p.price || 0)).filter(p => !Number.isNaN(p));
-    const min = prices.length ? Math.min(...prices) : 0;
-    const max = prices.length ? Math.max(...prices) : 0;
-    setMinPrice(min);
-    setMaxPrice(max || 0);
+    setSize("All");
+    setBadge("All");
+    setInStock(false);
+    setDealsOnly(false);
+    setNewOnly(false);
+    setMinDiscount(0);
+    setMinPrice(priceFloor);
+    setMaxPrice(priceCeil);
     setMinRating(0);
   };
 
@@ -407,7 +443,14 @@ export default function Shop() {
     subcategory !== "All" && { key: "subcat", label: subcategory,          clear: () => setSubcategory("All") },
     material    !== "All" && { key: "mat",    label: material,             clear: () => setMaterial("All")  },
     color       !== "All" && { key: "color",  label: color,                clear: () => setColor("All")     },
-    maxPrice  >  0      && { key: "price",  label: `Up to ${formatPKR(maxPrice)}`, clear: () => setMaxPrice(Math.max(...items.map(p => p.price || 0)))  },
+    size        !== "All" && { key: "size",   label: `Size: ${size}`,      clear: () => setSize("All")      },
+    badge       !== "All" && { key: "badge",  label: badge,                clear: () => setBadge("All")     },
+    inStock              && { key: "stock",  label: "In Stock",           clear: () => setInStock(false)   },
+    dealsOnly            && { key: "deals",  label: "Deals Only",         clear: () => setDealsOnly(false) },
+    newOnly              && { key: "new",    label: "New Arrivals",        clear: () => setNewOnly(false)   },
+    minDiscount > 0      && { key: "disc",   label: `${minDiscount}%+ Off`, clear: () => setMinDiscount(0)  },
+    minPrice    > priceFloor && { key: "minp", label: `Min ${formatPKR(minPrice)}`, clear: () => setMinPrice(priceFloor) },
+    maxPrice    < priceCeil  && { key: "price", label: `Up to ${formatPKR(maxPrice)}`, clear: () => setMaxPrice(priceCeil) },
     minRating >  0      && { key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0)     },
   ].filter(Boolean);
 
@@ -423,6 +466,28 @@ export default function Shop() {
             <XIcon />
           </button>
         </div>
+      </div>
+
+      {/* Quick toggles */}
+      <div style={{ display: "flex", gap: "0.5rem", padding: "0.85rem 0", borderBottom: "1px solid #ede7de", flexWrap: "wrap" }}>
+        {[
+          { label: "In Stock",     active: inStock,   toggle: () => setInStock(v => !v),   emoji: "✓" },
+          { label: "Deals",        active: dealsOnly, toggle: () => setDealsOnly(v => !v), emoji: "🔥" },
+          { label: "New Arrivals", active: newOnly,   toggle: () => setNewOnly(v => !v),   emoji: "✨" },
+        ].map(({ label, active, toggle, emoji }) => (
+          <button key={label} onClick={toggle} style={{
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            padding: "6px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer",
+            border: "1.5px solid", borderRadius: "999px",
+            background: active ? "var(--dark)" : "transparent",
+            color: active ? "#fff" : "var(--dark)",
+            borderColor: active ? "var(--dark)" : "#d8cebf",
+            transition: "0.18s all",
+            boxShadow: active ? "0 2px 10px rgba(46,13,16,0.22)" : "none",
+          }}>
+            <span style={{ fontSize: "11px" }}>{emoji}</span>{label}
+          </button>
+        ))}
       </div>
 
       <FilterGroup title="Category">
@@ -453,6 +518,43 @@ export default function Shop() {
               <span className="sp-check-label">{s}</span>
               <span className="sp-check-count">
                 {items.filter(p => p.category === category && p.subcategory === s).length}
+              </span>
+            </label>
+          ))}
+        </FilterGroup>
+      )}
+
+      <FilterGroup title="Price Range">
+        <div className="sp-price-wrap">
+          <div className="sp-price-display">
+            <span className="sp-price-tag">{formatPKR(priceFloor)}</span>
+            <span className="sp-price-current">{formatPKR(minPrice)} – {formatPKR(maxPrice)}</span>
+            <span className="sp-price-tag">{formatPKR(priceCeil)}</span>
+          </div>
+          <div style={{ marginBottom: "6px" }}>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "3px" }}>Min price</div>
+            <input type="range" min={priceFloor} max={priceCeil} value={minPrice}
+              onChange={e => setMinPrice(Math.min(+e.target.value, maxPrice))}
+              className="sp-range" />
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "3px" }}>Max price</div>
+            <input type="range" min={priceFloor} max={priceCeil} value={maxPrice}
+              onChange={e => setMaxPrice(Math.max(+e.target.value, minPrice))}
+              className="sp-range" />
+          </div>
+        </div>
+      </FilterGroup>
+
+      {SIZES.length > 1 && (
+        <FilterGroup title="Size">
+          {SIZES.map(s => (
+            <label key={s} className="sp-check-row">
+              <input type="radio" name="size" checked={size === s}
+                onChange={() => setSize(s)} className="sp-radio" />
+              <span className="sp-check-label">{s}</span>
+              <span className="sp-check-count">
+                {s === "All" ? items.length : items.filter(p => (p.sizes || []).includes(s)).length}
               </span>
             </label>
           ))}
@@ -497,24 +599,45 @@ export default function Shop() {
         ))}
       </FilterGroup>
 
-      <FilterGroup title="Price Range">
-        <div className="sp-price-wrap">
-          <div className="sp-price-display">
-            <span className="sp-price-tag">{formatPKR(minPrice || 0)}</span>
-            <span className="sp-price-current">{formatPKR(maxPrice || 0)}</span>
-            <span className="sp-price-tag">{formatPKR(Math.max(...items.map(p => p.price || 0), 0))}</span>
-          </div>
-          <input type="range" min={minPrice || 0} max={Math.max(...items.map(p => p.price || 0), 0) || 0} value={maxPrice || 0}
-            onChange={e => setMaxPrice(+e.target.value)} className="sp-range" />
-        </div>
-      </FilterGroup>
+      {BADGES.length > 1 && (
+        <FilterGroup title="Badge">
+          {BADGES.map(b => (
+            <label key={b} className="sp-check-row">
+              <input type="radio" name="badge" checked={badge === b}
+                onChange={() => setBadge(b)} className="sp-radio" />
+              <span className="sp-check-label">{b}</span>
+              <span className="sp-check-count">
+                {b === "All" ? items.length : items.filter(p => p.badge === b).length}
+              </span>
+            </label>
+          ))}
+        </FilterGroup>
+      )}
 
       <FilterGroup title="Customer Rating">
-        {[[0,"All Ratings"],[4,"4.0 & above"],[4.5,"4.5 & above"],[4.8,"4.8 & above"]].map(([val, lbl]) => (
+        {[[0,"All Ratings"],[3,"3+ Stars"],[4,"4+ Stars"],[4.5,"4.5+ Stars"],[4.8,"4.8+ Stars"]].map(([val, lbl]) => (
           <label key={val} className="sp-check-row">
             <input type="radio" name="rating" checked={minRating === val}
               onChange={() => setMinRating(val)} className="sp-radio" />
+            <span className="sp-check-label" style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              {val > 0 && (
+                <span style={{ color: "#d97706", fontSize: "11px" }}>
+                  {"★".repeat(Math.floor(val))}{val % 1 ? "½" : ""}
+                </span>
+              )}
+              {lbl}
+            </span>
+          </label>
+        ))}
+      </FilterGroup>
+
+      <FilterGroup title="Discount" defaultOpen={false}>
+        {[[0,"Any"],[10,"10%+ Off"],[20,"20%+ Off"],[30,"30%+ Off"],[50,"50%+ Off"]].map(([val, lbl]) => (
+          <label key={val} className="sp-check-row">
+            <input type="radio" name="disc" checked={minDiscount === val}
+              onChange={() => setMinDiscount(val)} className="sp-radio" />
             <span className="sp-check-label">{lbl}</span>
+            {val > 0 && <span style={{ fontSize: "10px", background: "#fef2f2", color: "#b91c1c", padding: "1px 6px", borderRadius: "999px", fontWeight: 700, marginLeft: "auto" }}>{val}%+</span>}
           </label>
         ))}
       </FilterGroup>

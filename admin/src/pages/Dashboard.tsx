@@ -91,6 +91,9 @@ export default function Dashboard() {
   const [salesData, setSalesData] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     apiGet('/api/dashboard')
@@ -160,6 +163,7 @@ export default function Dashboard() {
             <button className="text-xs font-semibold text-blue-600 hover:underline">View Report</button>
           </div>
           <div className="p-5 h-[300px] min-h-[300px] w-full min-w-0">
+            {mounted && (
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
               <BarChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -187,6 +191,7 @@ export default function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
 

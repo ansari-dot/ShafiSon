@@ -81,10 +81,11 @@ export default function Products() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([apiGet<Product[]>('/api/products'), apiGet<Category[]>('/api/categories')])
-      .then(([products, cats]) => {
+    Promise.all([apiGet<any>('/api/products'), apiGet<Category[]>('/api/categories')])
+      .then(([res, cats]) => {
         if (!active) return;
-        setItems(Array.isArray(products) ? products : []);
+        const products = Array.isArray(res) ? res : Array.isArray(res?.products) ? res.products : [];
+        setItems(products);
         setCategories(Array.isArray(cats) ? cats : []);
         setError('');
       })

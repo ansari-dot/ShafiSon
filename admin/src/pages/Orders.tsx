@@ -42,13 +42,13 @@ export default function Orders() {
 
   useEffect(() => {
     apiGet('/api/orders')
-      .then((list) => setOrders(Array.isArray(list) ? list : []))
+      .then((res: any) => setOrders(Array.isArray(res) ? res : Array.isArray(res?.orders) ? res.orders : []))
       .catch(() => setOrders([]));
   }, []);
 
   const refreshOrders = () => {
     apiGet('/api/orders')
-      .then((list) => setOrders(Array.isArray(list) ? list : []))
+      .then((res: any) => setOrders(Array.isArray(res) ? res : Array.isArray(res?.orders) ? res.orders : []))
       .catch(() => setOrders([]));
   };
 
