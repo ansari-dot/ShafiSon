@@ -34,7 +34,7 @@ a:hover {
 }
 
 .section-pad {
-    padding: 7rem 0;
+    padding: 4rem 0;
 }
 
 .btn-dark {
@@ -6259,13 +6259,13 @@ a:hover {
 
 @media (max-width: 768px) {
     .section-pad {
-        padding: 4rem 0;
+        padding: 2.5rem 0;
     }
 }
 
 @media (max-width: 480px) {
     .section-pad {
-        padding: 2.5rem 0;
+        padding: 1.5rem 0;
     }
 }
 
