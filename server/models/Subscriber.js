@@ -10,4 +10,6 @@ const subscriberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+subscriberSchema.index({ createdAt: -1 });
+
 export default mongoose.model("Subscriber", subscriberSchema);

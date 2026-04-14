@@ -15,4 +15,7 @@ const couponSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+couponSchema.index({ createdAt: -1 });
+couponSchema.index({ active: 1 });
+
 export default mongoose.model("Coupon", couponSchema);

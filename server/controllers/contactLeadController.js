@@ -2,8 +2,15 @@ import ContactLead from "../models/ContactLead.js";
 
 export async function getContactLeads(req, res) {
   try {
-    const leads = await ContactLead.find().sort({ createdAt: -1 }).lean();
-    return res.json(leads);
+    const pageNum  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limitNum = Math.max(1, parseInt(req.query.limit) || 20);
+    const skip     = (pageNum - 1) * limitNum;
+
+    const [leads, total] = await Promise.all([
+      ContactLead.find().sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      ContactLead.countDocuments(),
+    ]);
+    return res.json({ leads, total, page: pageNum, totalPages: Math.ceil(total / limitNum) });
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch contacts" });
   }

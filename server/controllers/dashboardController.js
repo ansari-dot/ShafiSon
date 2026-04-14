@@ -3,16 +3,11 @@ import Product from "../models/Product.js";
 import ContactLead from "../models/ContactLead.js";
 import Subscriber from "../models/Subscriber.js";
 
-function startOfDay(d) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
-
 function daysAgo(n) {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return startOfDay(d);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 function formatRelative(date) {
@@ -21,64 +16,87 @@ function formatRelative(date) {
   if (mins < 60) return `${mins} mins ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs} hours ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days} days ago`;
+  return `${Math.floor(hrs / 24)} days ago`;
 }
 
 export async function getDashboard(req, res) {
   try {
-    const now = new Date();
     const last30 = daysAgo(30);
     const prev30 = daysAgo(60);
+    const last7days = daysAgo(6);
 
     const [
       totalOrders,
       pendingOrders,
-      paidOrders,
-      products
+      revenueAgg,
+      last30Agg,
+      prev30Agg,
+      lowStockCount,
+      lowStockItems,
+      salesData,
+      recentOrders,
+      recentContacts,
+      recentSubscribers,
     ] = await Promise.all([
       Order.countDocuments(),
       Order.countDocuments({ status: "Pending" }),
-      Order.find({ paymentStatus: "Paid" }).lean(),
-      Product.find().lean(),
+
+      // total revenue
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid" } },
+        { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
+      ]),
+
+      // last 30 days
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: last30 } } },
+        { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
+      ]),
+
+      // prev 30 days
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: prev30, $lt: last30 } } },
+        { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
+      ]),
+
+      Product.countDocuments({ quantity: { $lte: 5 } }),
+      Product.find({ quantity: { $lte: 5 } }, { title: 1, quantity: 1 }).limit(10).lean(),
+
+      // sales per day for last 7 days using aggregation
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", createdAt: { $gte: last7days } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            sales: { $sum: "$total" },
+          },
+        },
+      ]),
+
+      Order.find({}, { orderCode: 1, customer: 1, status: 1, total: 1, createdAt: 1 })
+        .sort({ createdAt: -1 }).limit(6).lean(),
+      ContactLead.find({}, { firstName: 1, lastName: 1, createdAt: 1 })
+        .sort({ createdAt: -1 }).limit(3).lean(),
+      Subscriber.find({}, { name: 1, email: 1, createdAt: 1 })
+        .sort({ createdAt: -1 }).limit(3).lean(),
     ]);
 
-    const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalRevenue = revenueAgg[0]?.total || 0;
+    const last30Revenue = last30Agg[0]?.total || 0;
+    const last30Count = last30Agg[0]?.count || 0;
+    const prev30Revenue = prev30Agg[0]?.total || 0;
+    const prev30Count = prev30Agg[0]?.count || 0;
 
-    const last30Orders = paidOrders.filter((o) => new Date(o.createdAt) >= last30);
-    const prev30Orders = paidOrders.filter((o) => new Date(o.createdAt) >= prev30 && new Date(o.createdAt) < last30);
-
-    const last30Revenue = last30Orders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const prev30Revenue = prev30Orders.reduce((sum, o) => sum + (o.total || 0), 0);
-
-    const orderTrend = prev30Orders.length === 0 ? 0 : ((last30Orders.length - prev30Orders.length) / prev30Orders.length) * 100;
+    const orderTrend = prev30Count === 0 ? 0 : ((last30Count - prev30Count) / prev30Count) * 100;
     const revenueTrend = prev30Revenue === 0 ? 0 : ((last30Revenue - prev30Revenue) / prev30Revenue) * 100;
 
-    const lowStockThreshold = 5;
-    const lowStockItems = products.filter((p) => Number(p.quantity || 0) <= lowStockThreshold);
-
-    const recentOrders = await Order.find()
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .lean();
-    const recentContacts = await ContactLead.find()
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .lean();
-    const recentSubscribers = await Subscriber.find()
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .lean();
-
-    const salesData = Array.from({ length: 7 }).map((_, i) => {
+    // Build 7-day sales chart
+    const salesMap = Object.fromEntries(salesData.map((d) => [d._id, d.sales]));
+    const salesChart = Array.from({ length: 7 }).map((_, i) => {
       const day = daysAgo(6 - i);
-      const next = new Date(day);
-      next.setDate(next.getDate() + 1);
-      const total = paidOrders
-        .filter((o) => new Date(o.createdAt) >= day && new Date(o.createdAt) < next)
-        .reduce((sum, o) => sum + (o.total || 0), 0);
+      const key = day.toISOString().slice(0, 10);
       const name = day.toLocaleDateString("en-US", { weekday: "short" });
-      return { name, sales: Math.round(total) };
+      return { name, sales: Math.round(salesMap[key] || 0) };
     });
 
     const activityEvents = [];
@@ -90,7 +108,7 @@ export async function getDashboard(req, res) {
         _ts: new Date(o.createdAt).getTime(),
       });
     });
-    recentContacts.slice(0, 3).forEach((c) => {
+    recentContacts.forEach((c) => {
       activityEvents.push({
         type: "contact",
         text: `New contact message from ${c.firstName || "Customer"} ${c.lastName || ""}`.trim(),
@@ -98,7 +116,7 @@ export async function getDashboard(req, res) {
         _ts: new Date(c.createdAt).getTime(),
       });
     });
-    recentSubscribers.slice(0, 3).forEach((s) => {
+    recentSubscribers.forEach((s) => {
       activityEvents.push({
         type: "subscriber",
         text: `New newsletter subscriber: ${s.name || "Customer"} (${s.email || ""})`.trim(),
@@ -114,6 +132,7 @@ export async function getDashboard(req, res) {
         _ts: Date.now(),
       });
     }
+
     const activityFeed = activityEvents
       .sort((a, b) => b._ts - a._ts)
       .slice(0, 6)
@@ -124,11 +143,11 @@ export async function getDashboard(req, res) {
         totalOrders,
         totalRevenue,
         pendingOrders,
-        lowStock: lowStockItems.length,
+        lowStock: lowStockCount,
         orderTrend,
         revenueTrend,
       },
-      salesData,
+      salesData: salesChart,
       recentOrders: recentOrders.map((o) => ({
         id: o.orderCode,
         customer: `${o.customer?.firstName || ""} ${o.customer?.lastName || ""}`.trim(),

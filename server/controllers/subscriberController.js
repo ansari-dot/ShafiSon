@@ -2,8 +2,15 @@ import Subscriber from "../models/Subscriber.js";
 
 export async function getSubscribers(req, res) {
   try {
-    const list = await Subscriber.find().sort({ createdAt: -1 }).lean();
-    return res.json(list);
+    const pageNum  = Math.max(1, parseInt(req.query.page)  || 1);
+    const limitNum = Math.max(1, parseInt(req.query.limit) || 20);
+    const skip     = (pageNum - 1) * limitNum;
+
+    const [list, total] = await Promise.all([
+      Subscriber.find().sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Subscriber.countDocuments(),
+    ]);
+    return res.json({ subscribers: list, total, page: pageNum, totalPages: Math.ceil(total / limitNum) });
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch subscribers" });
   }

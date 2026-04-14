@@ -13,4 +13,7 @@ const contactLeadSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+contactLeadSchema.index({ createdAt: -1 });
+contactLeadSchema.index({ email: 1 });
+
 export default mongoose.model("ContactLead", contactLeadSchema);

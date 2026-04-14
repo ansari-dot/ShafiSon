@@ -11,4 +11,7 @@ const testimonialSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+testimonialSchema.index({ createdAt: -1 });
+testimonialSchema.index({ active: 1 });
+
 export default mongoose.model("Testimonial", testimonialSchema);
