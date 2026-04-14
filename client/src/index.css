@@ -2061,18 +2061,27 @@ svg {
     top: 0;
     left: 0;
     bottom: 0;
-    width: 300px;
-    max-width: 85vw;
+    width: 340px;
+    max-width: calc(100vw - 40px);
     background: #fff;
     z-index: 1200;
     overflow-y: auto;
     transform: translateX(-100%);
     transition: transform 0.28s ease;
     box-shadow: 4px 0 32px rgba(0, 0, 0, 0.15);
+    padding: 0;
+}
+
+.sp-drawer>* {
+    padding: 0 1rem;
 }
 
 .sp-drawer.sp-drawer-open {
     transform: translateX(0);
+}
+
+body.sp-drawer-open {
+    overflow: hidden;
 }
 
 .sp-drawer-close {
@@ -2167,6 +2176,33 @@ svg {
     /* hide sort in toolbar on mobile since it's in the filter bar */
     .sp-toolbar-right .sp-sort {
         display: none;
+    }
+    /* ── Mobile drawer content styling ── */
+    .sp-drawer .sp-sidebar-head {
+        padding: 1rem 0 0.75rem;
+        font-size: 15px;
+    }
+    .sp-drawer .sp-filter-group {
+        margin: 0.5rem 0;
+    }
+    .sp-drawer .sp-filter-group-btn {
+        padding: 1rem 0;
+        font-size: 14px;
+        letter-spacing: 0.4px;
+    }
+    .sp-drawer .sp-filter-group-body {
+        padding: 0.5rem 0 1.25rem;
+    }
+    .sp-drawer .sp-check-row {
+        padding: 8px 0;
+        gap: 11px;
+        font-size: 14px;
+    }
+    .sp-drawer .sp-check-label {
+        gap: 8px;
+    }
+    .sp-drawer .sp-clear-all {
+        font-size: 13px;
     }
 }
 
@@ -2270,6 +2306,14 @@ svg {
     outline: none;
     box-shadow: none;
     transition: border-color 0.15s, background 0.15s;
+}
+
+@media (max-width: 900px) {
+    .sp-drawer .sp-radio {
+        width: 18px;
+        height: 18px;
+        border-width: 2px;
+    }
 }
 
 .sp-radio:focus,

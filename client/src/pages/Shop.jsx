@@ -246,6 +246,17 @@ export default function Shop() {
   const [drawerOpen,   setDrawerOpen]   = useState(false);
 
   useEffect(() => {
+    if (drawerOpen) {
+      document.body.classList.add("sp-drawer-open");
+    } else {
+      document.body.classList.remove("sp-drawer-open");
+    }
+    return () => {
+      document.body.classList.remove("sp-drawer-open");
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
     let active = true;
     const loadProducts = async () => {
       try {
