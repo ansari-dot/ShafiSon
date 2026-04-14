@@ -34,6 +34,12 @@ body {
     background-color: var(--lightbg);
 }
 
+a {
+    text-decoration: none;
+    color: var(--dark);
+    transition: 0.3s all ease;
+}
+
 a:hover {
     color: rgba(46, 13, 16, 0.6);
 }
