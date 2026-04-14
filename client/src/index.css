@@ -1,4 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --brand: #2E0D10;
     --brand-dark: #1A0709;
@@ -13,6 +17,14 @@
     --lightbg: #E8E3D6;
 }
 
+html,
+body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
 body {
     font-family: "Inter", sans-serif;
     font-weight: 400;
@@ -20,17 +32,23 @@ body {
     color: var(--muted);
     font-size: 14px;
     background-color: var(--lightbg);
-    overflow-x: hidden;
-}
-
-a {
-    text-decoration: none;
-    color: var(--dark);
-    transition: 0.3s all ease;
 }
 
 a:hover {
     color: rgba(46, 13, 16, 0.6);
+}
+
+
+/* Prevent horizontal overflow on mobile */
+
+img,
+picture,
+video,
+canvas,
+svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
 }
 
 .section-pad {
@@ -6277,6 +6295,23 @@ a:hover {
         padding-left: 1rem;
         padding-right: 1rem;
     }
+    img,
+    picture,
+    video,
+    canvas,
+    svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+    }
+    .nb-mega,
+    .nb-mega-inner {
+        width: calc(100vw - 2rem);
+        max-width: none;
+        left: 1rem !important;
+        right: 1rem !important;
+        transform: none !important;
+    }
 }
 
 
@@ -6906,12 +6941,14 @@ a:hover {
     left: 50%;
     top: 100%;
     transform: translateX(-50%) translateY(10px);
-    width: 100vw;
+    width: 100%;
+    max-width: calc(100vw - 2px);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: opacity 0.22s ease, transform 0.22s ease;
     z-index: 1200;
+    overflow: hidden;
 }
 
 .nb-mega-open {
@@ -6922,7 +6959,7 @@ a:hover {
 }
 
 .nb-mega-inner {
-    width: 100vw;
+    width: 100%;
     margin: 0;
     background: linear-gradient(140deg, #f9f6ef 0%, #f3ecdf 52%, #eee3d2 100%);
     border: 1px solid #ddceb4;
