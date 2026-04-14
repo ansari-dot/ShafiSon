@@ -4,6 +4,7 @@ const productSchema = new mongoose.Schema({
     sku: { type: String, unique: true, sparse: true, default: '' },
     title: { type: String, required: true },
     price: { type: Number, required: true },
+    priceUnit: { type: String, default: 'per yard' },
     quantity: { type: Number, default: 0 },
     isDeal: { type: Boolean, default: false },
     img: { type: String, default: "" },

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Search, Filter, ShoppingBag, CheckCircle, Truck, Clock, Eye, X } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { apiGet, apiPut } from '@/src/lib/api';
+import { apiGet, apiPut, apiDelete } from '@/src/lib/api';
 import { formatPKR } from '@/src/lib/formatCurrency';
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -39,6 +39,7 @@ export default function Orders() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any | null>(null);
   const [savingStatus, setSavingStatus] = useState(false);
+  const [deletingStatus, setDeletingStatus] = useState(false);
 
   useEffect(() => {
     apiGet('/api/orders')
@@ -193,9 +194,13 @@ export default function Orders() {
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                 <h4 className="font-semibold text-slate-900 mb-2">Customer</h4>
                 <div className="text-sm text-slate-600">
-                  <div>{selected.customer?.firstName} {selected.customer?.lastName}</div>
-                  <div>{selected.customer?.email}</div>
-                  <div>{selected.customer?.phone}</div>
+                  <div>First name: <span className="font-semibold text-slate-900">{selected.customer?.firstName || '—'}</span></div>
+                  <div>Last name: <span className="font-semibold text-slate-900">{selected.customer?.lastName || '—'}</span></div>
+                  {selected.customer?.company && (
+                    <div>Company: <span className="font-semibold text-slate-900">{selected.customer.company}</span></div>
+                  )}
+                  <div>Email: <span className="font-semibold text-slate-900">{selected.customer?.email || '—'}</span></div>
+                  <div>Phone: <span className="font-semibold text-slate-900">{selected.customer?.phone || '—'}</span></div>
                 </div>
                 <div className="mt-3 text-sm text-slate-600">
                   <div>{selected.customer?.address1}</div>
@@ -225,7 +230,7 @@ export default function Orders() {
                     </select>
                     <button
                       className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white"
-                      disabled={savingStatus}
+                      disabled={savingStatus || deletingStatus}
                       onClick={async () => {
                         setSavingStatus(true);
                         try {
@@ -239,6 +244,25 @@ export default function Orders() {
                     >
                       {savingStatus ? "Saving..." : "Save"}
                     </button>
+                    <button
+                      className="px-3 py-2 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700"
+                      disabled={deletingStatus || savingStatus}
+                      onClick={async () => {
+                        if (!window.confirm('Delete this order? This cannot be undone.')) return;
+                        setDeletingStatus(true);
+                        try {
+                          await apiDelete(`/api/orders/${selected.orderCode}`);
+                          setSelected(null);
+                          refreshOrders();
+                        } catch (err) {
+                          window.alert(err?.message || 'Failed to delete order');
+                        } finally {
+                          setDeletingStatus(false);
+                        }
+                      }}
+                    >
+                      {deletingStatus ? "Deleting..." : "Delete"}
+                    </button>
                   </div>
                 </div>
                 <div className="mt-3 text-sm text-slate-600">
@@ -250,36 +274,39 @@ export default function Orders() {
               <div className="md:col-span-2 bg-white border border-slate-100 rounded-lg">
                 <div className="px-4 py-3 border-b border-slate-100 font-semibold text-slate-900">Items</div>
                 <div className="divide-y divide-slate-100">
-                  {(selected.items || []).map((item: any, idx: number) => (
-                    <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
-                      <div>
-                        <div className="font-semibold text-slate-900">{item.title}</div>
-                        {item.sku && <div className="text-[11px] font-mono text-slate-400">SKU: {item.sku}</div>}
-                        {item.subcategorySerial && <div className="text-[11px] font-mono text-slate-400">Sub-cat #: {item.subcategorySerial}</div>}
-                        <div className="text-slate-500">Qty: {item.qty}</div>
-                        {(item.color || item.size) && (
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {item.color && (
-                              <span className="flex items-center gap-1 text-slate-500">
-                                {item.colorHex && (
-                                  <span style={{ width:10, height:10, borderRadius:'50%', background:item.colorHex, border:'1px solid #cbd5e1', display:'inline-block', flexShrink:0 }} />
-                                )}
-                                {item.color}
-                              </span>
-                            )}
-                            {item.color && item.size && <span className="text-slate-300">·</span>}
-                            {item.size && <span className="text-slate-500">Size: {item.size}</span>}
-                          </div>
-                        )}
+                  {(selected.items || []).map((item: any, idx: number) => {
+                    const unitLabel = String(item.priceUnit || 'per yard').replace(/^per\s+/i, '');
+                    return (
+                      <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
+                        <div>
+                          <div className="font-semibold text-slate-900">{item.title}</div>
+                          {item.sku && <div className="text-[11px] font-mono text-slate-400">SKU: {item.sku}</div>}
+                          {item.subcategorySerial && <div className="text-[11px] font-mono text-slate-400">Sub-cat #: {item.subcategorySerial}</div>}
+                          <div className="text-slate-500">Qty: {item.qty} {unitLabel}</div>
+                          {(item.color || item.size) && (
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {item.color && (
+                                <span className="flex items-center gap-1 text-slate-500">
+                                  {item.colorHex && (
+                                    <span style={{ width:10, height:10, borderRadius:'50%', background:item.colorHex, border:'1px solid #cbd5e1', display:'inline-block', flexShrink:0 }} />
+                                  )}
+                                  {item.color}
+                                </span>
+                              )}
+                              {item.color && item.size && <span className="text-slate-300">·</span>}
+                              {item.size && <span className="text-slate-500">Size: {item.size}</span>}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-slate-900 font-semibold">{formatPKR(item.unitPrice || 0)}</div>
+                          {item.originalPrice > item.unitPrice && (
+                            <div className="text-slate-400 line-through">{formatPKR(item.originalPrice)}</div>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-slate-900 font-semibold">{formatPKR(item.unitPrice || 0)}</div>
-                        {item.originalPrice > item.unitPrice && (
-                          <div className="text-slate-400 line-through">{formatPKR(item.originalPrice)}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

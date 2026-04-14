@@ -49,6 +49,7 @@ export default function Wishlist() {
       img: item.img,
       unitPrice: Number(item.price || 0),
       originalPrice: Number(item.price || 0),
+      priceUnit: item.priceUnit || 'per yard',
       isDeal: false,
       quantity: getQuantity(stockProduct),
     }, 1);
@@ -84,7 +85,10 @@ export default function Wishlist() {
                   </Link>
                   <p className="wl-cat">{item.category || "Product"}</p>
                   <Link to={`/shop/${item.id}`} className="wl-name">{item.title}</Link>
-                  <strong className="wl-price">{formatPKR(item.price)}</strong>
+                  <div className="wl-price-row">
+                    <strong className="wl-price">{formatPKR(item.price)}</strong>
+                    <span className="wl-price-unit">{item.priceUnit || 'per yard'}</span>
+                  </div>
                   <div className="wl-actions">
                     {outOfStock && <span className="wl-stock-badge wl-stock-badge-out">Out of Stock</span>}
                     {lowStock && <span className="wl-stock-badge wl-stock-badge-low">Low Stock ({qty} left)</span>}

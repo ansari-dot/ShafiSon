@@ -122,6 +122,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
       img: item.img,
       unitPrice: Number(unitPrice || 0),
       originalPrice: Number(item.price || 0),
+      priceUnit: item.priceUnit || 'per yard',
       isDeal: !!item.isDeal,
     }, 1);
   };
@@ -176,9 +177,10 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
               <span style={{ marginLeft: "0.5rem", textDecoration: "line-through", color: "#9ca3af", fontWeight: 600 }}>
                 {formatPKR(item.price)}
               </span>
+              <span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "4px" }}>{item.priceUnit || "per yard"}</span>
             </div>
           ) : (
-            <strong className="sp-card-price">{formatPKR(item.price)}</strong>
+            <div className="sp-card-price"><strong>{formatPKR(item.price)}</strong><span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "4px" }}>{item.priceUnit || "per yard"}</span></div>
           )}
           {isList && (
             <button className={`sp-list-cart-btn ${outOfStock ? "disabled" : ""}`} onClick={handleAdd} disabled={outOfStock}><CartIcon /> {outOfStock ? "Out of Stock" : "Add to Cart"}</button>

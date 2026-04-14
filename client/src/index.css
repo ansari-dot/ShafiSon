@@ -5925,6 +5925,58 @@ a:hover {
     }
 }
 
+@media (max-width: 520px) {
+    .hero {
+        padding: 2.2rem 0 1.8rem;
+    }
+    .hero-title {
+        font-size: 1.6rem !important;
+        line-height: 1.2;
+    }
+    .hero-text,
+    .hero-highlights {
+        font-size: 14px;
+    }
+    .hero-copy-col {
+        width: 100%;
+    }
+    .hero .btn-accent,
+    .hero .btn-white-outline {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 0;
+    }
+    .hero-offer-chip {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.85rem 0.85rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        margin-top: 0.25rem;
+    }
+    .hero-img-wrap {
+        min-height: 220px;
+    }
+    .hero-orb-1 {
+        width: 110px;
+        height: 110px;
+        right: 4%;
+        top: 5%;
+    }
+    .hero-orb-2 {
+        width: 100px;
+        height: 100px;
+        left: 4%;
+        bottom: 9%;
+    }
+    .hero-slide-dots {
+        bottom: 8px;
+        right: 50%;
+        transform: translateX(50%);
+    }
+}
+
 
 /* ── Footer ── */
 
@@ -6991,9 +7043,14 @@ a:hover {
     .nb-main-row {
         grid-template-columns: auto 1fr auto;
         height: 74px;
+        gap: 0.75rem;
+        align-items: center;
     }
     .nb-logo-center {
         justify-self: start;
+    }
+    .nb-actions {
+        gap: 0.45rem;
     }
     .nb-inner {
         display: none;
@@ -7003,6 +7060,50 @@ a:hover {
     }
     .nb-hamburger {
         display: flex;
+    }
+}
+
+@media (max-width: 680px) {
+    .nb-topbar-inner {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .nb-topbar-text {
+        width: 100%;
+        text-align: center;
+        font-size: 10.5px;
+    }
+    .nb-topbar-right {
+        justify-content: center;
+        gap: 0.7rem;
+        width: 100%;
+    }
+    .nb-main-row {
+        grid-template-columns: auto auto;
+        height: auto;
+        padding: 0.75rem 0;
+    }
+    .nb-actions {
+        gap: 0.35rem;
+    }
+    .nb-icon-btn,
+    .nb-hamburger {
+        width: 34px;
+        height: 34px;
+    }
+    .nb-mobile-drawer {
+        width: min(90vw, 320px);
+    }
+    .nb-mobile-head {
+        padding: 1rem 1rem;
+    }
+    .nb-mobile-links {
+        padding: 0.75rem 0.75rem;
+    }
+    .nb-mobile-link {
+        font-size: 15px;
+        padding: 12px 14px;
     }
 }
 

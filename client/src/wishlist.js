@@ -36,6 +36,7 @@ export function addToWishlist(item) {
     title: item.title,
     img: item.img,
     price: Number(item.price || 0),
+    priceUnit: item.priceUnit || 'per yard',
     category: item.category || "",
   });
   setWishlist(list);

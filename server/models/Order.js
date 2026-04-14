@@ -7,6 +7,7 @@ const orderItemSchema = new mongoose.Schema(
     qty: { type: Number, required: true },
     unitPrice: { type: Number, required: true },
     originalPrice: { type: Number, default: 0 },
+    priceUnit: { type: String, default: 'per yard' },
     isDeal: { type: Boolean, default: false },
     size: { type: String, default: '' },
     color: { type: String, default: '' },

@@ -48,3 +48,13 @@ export async function updateOrderStatus(req, res) {
     return res.status(500).json({ message: "Failed to update order" });
   }
 }
+
+export async function deleteOrder(req, res) {
+  try {
+    const deleted = await Order.findOneAndDelete({ orderCode: req.params.code }).lean();
+    if (!deleted) return res.status(404).json({ message: "Order not found" });
+    return res.json({ message: "Order deleted" });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to delete order" });
+  }
+}

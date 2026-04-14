@@ -53,6 +53,7 @@ export async function initPayfast(req, res) {
         qty: Number(c.qty || 1),
         unitPrice,
         originalPrice: Number(basePrice || 0),
+        priceUnit: prod?.priceUnit || c.priceUnit || 'per yard',
         isDeal,
         size: c.size || '',
         color: c.color || '',

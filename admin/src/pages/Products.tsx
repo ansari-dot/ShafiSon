@@ -20,6 +20,7 @@ type Product = {
   category: string;
   subcategory?: string;
   price: number;
+  priceUnit?: string;
   quantity?: number;
   inStock: boolean;
   rating?: number;
@@ -44,6 +45,7 @@ type Product = {
 const emptyForm = {
   title: '',
   price: '',
+  priceUnit: 'per yard',
   quantity: '',
   category: '',
   subcategory: '',
@@ -121,6 +123,7 @@ export default function Products() {
     setForm({
       title: p.title || '',
       price: String(p.price ?? ''),
+      priceUnit: p.priceUnit || 'per yard',
       quantity: String(p.quantity ?? ''),
       category: p.category || '',
       subcategory: p.subcategory || '',
@@ -217,6 +220,7 @@ export default function Products() {
     const payload = {
       title: form.title.trim(),
       price: Number(form.price),
+      priceUnit: form.priceUnit || 'per yard',
       quantity: form.quantity ? Number(form.quantity) : 0,
       category: form.category.trim(),
       subcategory: form.subcategory.trim(),
@@ -339,7 +343,7 @@ export default function Products() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">{product.category}{product.subcategory ? ` / ${product.subcategory}` : ''}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-slate-900">{formatPKR(product.price)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-slate-900">{formatPKR(product.price)}<span className="text-xs font-normal text-slate-400 ml-1">{(product as any).priceUnit || 'per yard'}</span></td>
                     <td className="px-6 py-4 text-sm text-slate-600">{product.quantity ?? 0}</td>
                     <td className="px-6 py-4">
                       <span className={cn(
@@ -387,7 +391,16 @@ export default function Products() {
               </div>
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Price *</label>
-                <input type="number" className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.price} onChange={(e) => onChange('price', e.target.value)} required />
+                <div className="flex gap-2 mt-1">
+                  <input type="number" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.price} onChange={(e) => onChange('price', e.target.value)} required />
+                  <select className="rounded-md border border-slate-200 px-2 py-2 text-sm shrink-0" value={(form as any).priceUnit || 'per yard'} onChange={(e) => onChange('priceUnit' as any, e.target.value)}>
+                    <option value="per yard">/ yard</option>
+                    <option value="per meter">/ meter</option>
+                    <option value="per piece">/ piece</option>
+                    <option value="per roll">/ roll</option>
+                    <option value="per set">/ set</option>
+                  </select>
+                </div>
               </div>
               <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Quantity</label>

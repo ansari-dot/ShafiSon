@@ -198,6 +198,7 @@ export default function Cart() {
 
                         <div className="cart-line-price-wrap">
                           <span className="cart-line-price">{formatPKR(row.unitPrice)}</span>
+                          <span className="cart-line-price-unit">{row.priceUnit || 'per yard'}</span>
                           {row.originalPrice && row.originalPrice > row.unitPrice && (
                             <span className="cart-line-old-price">{formatPKR(row.originalPrice)}</span>
                           )}

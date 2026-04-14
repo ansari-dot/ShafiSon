@@ -63,6 +63,7 @@ export default function Checkout() {
           title: i.title,
           qty: i.qty,
           unitPrice: i.unitPrice,
+          priceUnit: i.priceUnit || 'per yard',
           size: i.size || '',
           color: i.color || '',
           colorHex: i.colorHex || '',
@@ -209,7 +210,10 @@ export default function Checkout() {
                             </p>
                           )}
                         </div>
-                        <p className="checkout-order-price">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</p>
+                        <div className="checkout-order-price-row">
+                          <p className="checkout-order-price">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</p>
+                          <p className="checkout-order-unit">{row.priceUnit || 'per yard'}</p>
+                        </div>
                       </div>
                     ))}
                     {items.length === 0 && (

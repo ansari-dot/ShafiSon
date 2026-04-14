@@ -167,7 +167,8 @@ export default function ProductDetail() {
         if (!active) return;
         setProduct(p);
         setWished(hasInWishlist(p?._id));
-        setAllProducts(Array.isArray(list) ? list : []);
+        const productList = Array.isArray(list) ? list : Array.isArray(list?.products) ? list.products : [];
+        setAllProducts(productList);
         setDeal(dealDoc || null);
         setSize(null);
         setSelectedColor(null);
@@ -191,6 +192,7 @@ export default function ProductDetail() {
       title: product.title,
       img: product.img,
       price: product.price,
+      priceUnit: product.priceUnit || 'per yard',
       category: product.category,
     });
     setWished(activeWish);
@@ -263,6 +265,7 @@ export default function ProductDetail() {
       img: activeColor?.image || product.img,
       unitPrice: Number(unitPrice || 0),
       originalPrice: Number(product.price || 0),
+      priceUnit: product.priceUnit || 'per yard',
       isDeal: !!product.isDeal,
       size: selectedSizeName,
       color: selectedColorName,
@@ -368,6 +371,7 @@ export default function ProductDetail() {
             {/* Price */}
             <div className="pd-price-row">
               <span className="pd-price">{formatPKR(dealActive ? dealPrice : product.price)}</span>
+              <span style={{ fontSize: "13px", color: "#9ca3af", fontWeight: 500, alignSelf: "flex-end", marginBottom: "2px" }}>{product.priceUnit || "per yard"}</span>
               {dealActive && (
                 <>
                   <span className="pd-price-orig" style={{ textDecoration: "line-through" }}>
