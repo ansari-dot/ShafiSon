@@ -39,4 +39,3 @@ productSchema.index({ isDeal: 1 });
 productSchema.index({ title: "text", sku: "text", category: "text" });
 
 export default mongoose.model("Product", productSchema);
-
