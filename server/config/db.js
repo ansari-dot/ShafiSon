@@ -6,9 +6,11 @@ export async function connectDB() {
 
   try {
     await mongoose.connect(uri, {
-      maxPoolSize: 10,
+      maxPoolSize: 20,
+      minPoolSize: 5,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      compressors: "zlib",
     });
     console.log("MongoDB connected");
     return true;

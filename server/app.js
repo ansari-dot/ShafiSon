@@ -21,6 +21,7 @@ import heroBannerRoutes from "./routes/heroBannerRoutes.js";
 import categorySectionRoutes from "./routes/categorySectionRoutes.js";
 
 import { connectDB } from "./config/db.js";
+import { cache, invalidateCache } from "./middlewares/cache.js";
 
 dotenv.config();
 
@@ -72,24 +73,24 @@ app.use((req, res, next) => {
 await connectDB();
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/coupons", couponRoutes);
-app.use("/api/testimonials", testimonialRoutes);
-app.use("/api/home-collection", homeCollectionRoutes);
-app.use("/api/compare-section", compareSectionRoutes);
-app.use("/api/popular-picks", popularPicksRoutes);
-app.use("/api/home-categories", homeCategoriesRoutes);
-app.use("/api/deal-section", dealSectionRoutes);
+app.use("/api/products", cache(60), productRoutes);
+app.use("/api/categories", cache(120), categoryRoutes);
+app.use("/api/coupons", cache(120), couponRoutes);
+app.use("/api/testimonials", cache(120), testimonialRoutes);
+app.use("/api/home-collection", cache(60), homeCollectionRoutes);
+app.use("/api/compare-section", cache(60), compareSectionRoutes);
+app.use("/api/popular-picks", cache(60), popularPicksRoutes);
+app.use("/api/home-categories", cache(60), homeCategoriesRoutes);
+app.use("/api/deal-section", cache(60), dealSectionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments/payfast", payfastRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/contacts", contactLeadRoutes);
-app.use("/api/about-team", aboutTeamRoutes);
+app.use("/api/about-team", cache(120), aboutTeamRoutes);
 app.use("/api/subscribers", subscriberRoutes);
-app.use("/api/hero-banner", heroBannerRoutes);
-app.use("/api/category-sections", categorySectionRoutes);
+app.use("/api/hero-banner", cache(60), heroBannerRoutes);
+app.use("/api/category-sections", cache(60), categorySectionRoutes);
 
-
+export { invalidateCache };
 export default app;

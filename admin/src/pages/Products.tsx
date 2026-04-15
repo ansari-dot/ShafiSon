@@ -180,8 +180,8 @@ export default function Products() {
         if (!src) return reject(new Error('Invalid image file'));
         const img = new Image();
         img.onload = () => {
-          const maxW = 1200;
-          const maxH = 1200;
+          const maxW = 800;
+          const maxH = 800;
           const scale = Math.min(maxW / img.width, maxH / img.height, 1);
           const w = Math.max(1, Math.round(img.width * scale));
           const h = Math.max(1, Math.round(img.height * scale));
@@ -191,7 +191,7 @@ export default function Products() {
           const ctx = canvas.getContext('2d');
           if (!ctx) return reject(new Error('Failed to process image'));
           ctx.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.82));
+          resolve(canvas.toDataURL('image/jpeg', 0.65));
         };
         img.onerror = () => reject(new Error('Failed to load image'));
         img.src = src;
