@@ -111,11 +111,44 @@ svg {
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.hero {
-    background: radial-gradient(circle at 84% 24%, rgba(232, 227, 214, 0.28), transparent 42%), radial-gradient(circle at 6% 18%, rgba(198, 193, 177, 0.24), transparent 32%), var(--brand-gradient);
-    padding: 5.2rem 0 4.4rem;
+
+/* ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+
+/* HERO WITH BANNER */
+
+
+/* ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+
+.hero-with-banner {
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding: 15rem 0 12rem;
     position: relative;
     overflow: hidden;
+    min-height: 750px;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(26, 7, 9, 0.5), rgba(26, 7, 9, 0.3) 50%);
+    pointer-events: none;
+}
+
+.hero-with-banner .container {
+    position: relative;
+    z-index: 1;
+}
+
+.hero {
+    background: radial-gradient(circle at 84% 24%, rgba(232, 227, 214, 0.28), transparent 42%), radial-gradient(circle at 6% 18%, rgba(198, 193, 177, 0.24), transparent 32%), var(--brand-gradient);
+    padding: 15rem 0 12rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 750px;
 }
 
 .hero::before {
@@ -1684,8 +1717,8 @@ svg {
 }
 
 .cmp-product-img {
-    width: 90px;
-    height: 90px;
+    width: 140px;
+    height: 140px;
     object-fit: contain;
     display: block;
 }
@@ -1846,8 +1879,8 @@ svg {
         border-bottom: 1px solid #e8edec;
     }
     .cmp-card-img {
-        width: 90px;
-        height: 90px;
+        width: 140px;
+        height: 140px;
         object-fit: contain;
         background: #fff;
         border-radius: 10px;
@@ -4473,8 +4506,10 @@ body.sp-drawer-open {
 ══════════════════════════════ */
 
 .nb-nav {
-    position: sticky;
+    position: fixed;
     top: 41px;
+    left: 0;
+    right: 0;
     z-index: 1000;
     background: rgba(47, 17, 23, 0.66);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -4484,8 +4519,10 @@ body.sp-drawer-open {
 }
 
 .nb-topbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1001;
     background: rgba(239, 231, 214, 0.92);
     border-bottom: 1px solid rgba(46, 13, 16, 0.15);
@@ -5939,8 +5976,10 @@ body.sp-drawer-open {
 /* ── Hero component ── */
 
 @media (max-width: 768px) {
-    .hero {
-        padding: 3rem 0 2.7rem;
+    .hero,
+    .hero-with-banner {
+        padding: 15rem 0 12rem;
+        min-height: 750px;
     }
     .hero-copy-col {
         padding-top: 0;
@@ -5989,13 +6028,15 @@ body.sp-drawer-open {
         display: none;
     }
     .nb-nav {
-        top: 40px;
+        top: 41px;
     }
 }
 
 @media (max-width: 520px) {
-    .hero {
-        padding: 2.2rem 0 1.8rem;
+    .hero,
+    .hero-with-banner {
+        padding: 15rem 0 12rem;
+        min-height: 750px;
     }
     .hero-title {
         font-size: 1.6rem !important;
@@ -9031,4 +9072,70 @@ body.sp-drawer-open {
 .sp-card-color-dot.active {
     transform: scale(1.25);
     border-color: var(--dark);
+}
+
+.section-pad-sm {
+    padding: 1.5rem 0 4rem;
+}
+
+
+/* ── Home Section Divider ── */
+
+.home-section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.25rem 0;
+    margin: 0 auto;
+    max-width: 320px;
+}
+
+.home-section-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(46, 13, 16, 0.18), transparent);
+}
+
+.home-section-divider-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(46, 13, 16, 0.22);
+    flex-shrink: 0;
+}
+
+.home-section-divider-dot:nth-child(3) {
+    width: 6px;
+    height: 6px;
+    background: rgba(46, 13, 16, 0.35);
+}
+
+
+/* ── Category Sections Grid (4 per row, no carousel) ── */
+
+.cat-section-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+}
+
+@media (max-width: 1024px) {
+    .cat-section-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .cat-section-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cat-section-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
 }

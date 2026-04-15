@@ -65,7 +65,7 @@ export default function TestimonialSlider({ padded = true }) {
                 <img
                   src={current.img}
                   alt={current.name}
-                  className="rounded-circle"
+                  className="rounded-circle d-block mx-auto"
                   width="80"
                   height="80"
                 />

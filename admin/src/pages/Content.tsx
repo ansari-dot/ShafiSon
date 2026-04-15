@@ -2,11 +2,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame, Users } from 'lucide-react';
-import { apiGet, apiPut } from '@/src/lib/api';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/src/lib/api';
 
 type Product = {
   _id: string;
   title: string;
+  category?: string;
 };
 
 type Category = {
@@ -80,6 +81,17 @@ type HeroBanner = {
   heroImages: string[];
 };
 
+type CategorySection = {
+  _id?: string;
+  title: string;
+  heading: string;
+  text: string;
+  categoryIds: string[];
+  productIds: string[];
+  position: number;
+  active: boolean;
+};
+
 export default function Content() {
   const [openHero, setOpenHero] = useState(false);
   const [open, setOpen] = useState(false);
@@ -88,6 +100,8 @@ export default function Content() {
   const [openCats, setOpenCats] = useState(false);
   const [openDeal, setOpenDeal] = useState(false);
   const [openTeam, setOpenTeam] = useState(false);
+  const [openCatSections, setOpenCatSections] = useState(false);
+  const [openEditCatSection, setOpenEditCatSection] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,6 +111,19 @@ export default function Content() {
   const [popularSearch, setPopularSearch] = useState('');
   const [catSearch, setCatSearch] = useState('');
   const [dealSearch, setDealSearch] = useState('');
+  const [catSectionSearch, setCatSectionSearch] = useState('');
+  const [catSectionProductSearch, setCatSectionProductSearch] = useState('');
+  const [catSections, setCatSections] = useState<CategorySection[]>([]);
+  const [selectedCatSection, setSelectedCatSection] = useState<CategorySection | null>(null);
+  const [catSectionForm, setCatSectionForm] = useState<CategorySection>({
+    title: 'Featured Category',
+    heading: 'Explore Our Range',
+    text: '',
+    categoryIds: [],
+    productIds: [],
+    position: 0,
+    active: true,
+  });
 
   const [heroForm, setHeroForm] = useState<HeroBanner>({
     label: 'New Arrival Campaign',
@@ -175,9 +202,10 @@ export default function Content() {
       apiGet<DealSection | null>('/api/deal-section'),
       apiGet<AboutTeamSection | null>('/api/about-team'),
       apiGet<{ products: Product[]; total: number } | Product[]>('/api/products?limit=1000'),
-      apiGet<Category[]>('/api/categories')
+      apiGet<Category[]>('/api/categories'),
+      apiGet<CategorySection[]>('/api/category-sections')
     ])
-      .then(([heroDoc, doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList]) => {
+      .then(([heroDoc, doc, compareDoc, popularDoc, catDoc, dealDoc, teamDoc, list, catList, catSectionsList]) => {
         if (!active) return;
         if (heroDoc) {
           setHeroForm({
@@ -247,6 +275,7 @@ export default function Content() {
         }
         setProducts(Array.isArray(list) ? list : (list as { products: Product[] }).products || []);
         setCategories(Array.isArray(catList) ? catList : []);
+        setCatSections(Array.isArray(catSectionsList) ? catSectionsList : []);
       })
       .catch((err: Error) => {
         if (!active) return;
@@ -286,6 +315,12 @@ export default function Content() {
     if (!q) return products;
     return products.filter((p) => p.title.toLowerCase().includes(q));
   }, [products, dealSearch]);
+
+  const filteredCategoryForCatSection = useMemo(() => {
+    const q = catSectionSearch.trim().toLowerCase();
+    if (!q) return categories;
+    return categories.filter((c) => c.name.toLowerCase().includes(q));
+  }, [categories, catSectionSearch]);
 
   const toggleProduct = (id: string) => {
     setForm((f) => {
@@ -427,6 +462,86 @@ export default function Content() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleCategorySectionCategory = (id: string) => {
+    setCatSectionForm((f) => {
+      const exists = f.categoryIds.includes(id);
+      const nextCategoryIds = exists ? f.categoryIds.filter((x) => x !== id) : [...f.categoryIds, id];
+      // remove products that no longer belong to any selected category
+      const selectedCatNames = categories
+        .filter((c) => nextCategoryIds.includes(c._id))
+        .map((c) => c.name);
+      const nextProductIds = f.productIds.filter((pid) => {
+        const p = products.find((pr) => pr._id === pid);
+        return p && !!p.category && selectedCatNames.includes(p.category);
+      });
+      return { ...f, categoryIds: nextCategoryIds, productIds: nextProductIds };
+    });
+  };
+
+  const toggleCategorySectionProduct = (id: string) => {
+    setCatSectionForm((f) => {
+      const exists = f.productIds.includes(id);
+      const next = exists ? f.productIds.filter((x) => x !== id) : [...f.productIds, id];
+      return { ...f, productIds: next };
+    });
+  };
+
+  const saveCategorySection = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      if (selectedCatSection?._id) {
+        await apiPut(`/api/category-sections/${selectedCatSection._id}`, catSectionForm);
+      } else {
+        await apiPost('/api/category-sections', catSectionForm);
+      }
+      const updated = await apiGet<CategorySection[]>('/api/category-sections');
+      setCatSections(Array.isArray(updated) ? updated : []);
+      setOpenEditCatSection(false);
+      setSelectedCatSection(null);
+      setCatSectionSearch('');
+      setCatSectionProductSearch('');
+      setCatSectionForm({
+        title: 'Featured Category',
+        heading: 'Explore Our Range',
+        text: '',
+        categoryIds: [],
+        productIds: [],
+        position: 0,
+        active: true,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save category section';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteCategorySection = async (id: string) => {
+    if (!confirm('Delete this category section?')) return;
+    setSaving(true);
+    setError('');
+    try {
+      await apiDelete(`/api/category-sections/${id}`);
+      const updated = await apiGet<CategorySection[]>('/api/category-sections');
+      setCatSections(Array.isArray(updated) ? updated : []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete category section';
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEditCatSectionModal = (section: CategorySection) => {
+    setSelectedCatSection(section);
+    setCatSectionForm({ ...section, productIds: section.productIds || [] });
+    setCatSectionSearch('');
+    setCatSectionProductSearch('');
+    setOpenEditCatSection(true);
   };
 
   const toLocalInputValue = (value?: string | null) => {
@@ -610,6 +725,40 @@ export default function Content() {
           <Users size={16} />
           Edit Team
         </button>
+      </div>
+
+      <div className="mb-6 bg-white border border-black/10 rounded-lg shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-bold text-slate-900">Homepage: Category Sections</h2>
+            <p className="text-sm text-slate-500">Create multiple category-based sections for the home page.</p>
+          </div>
+          <button onClick={() => { setSelectedCatSection(null); setCatSectionForm({ title: 'Featured Category', heading: 'Explore Our Range', text: '', categoryIds: [], productIds: [], position: 0, active: true }); setCatSectionSearch(''); setCatSectionProductSearch(''); setOpenEditCatSection(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 font-medium shadow-sm hover:bg-blue-700 transition-colors">
+            <Layers size={16} />
+            Add Section
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {catSections.map((section, idx) => (
+            <motion.div key={section._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-3 border border-slate-200 rounded-lg bg-slate-50 flex flex-col">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900 text-sm">{section.title}</h3>
+                  <p className="text-xs text-slate-500">{section.categoryIds?.length || 0} categories</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => openEditCatSectionModal(section)} className="text-blue-600 hover:text-blue-700 p-1">
+                    <Edit3 size={14} />
+                  </button>
+                  <button onClick={() => deleteCategorySection(section._id!)} className="text-red-600 hover:text-red-700 p-1">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 line-clamp-2">{section.heading}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {openHero && (
@@ -1177,6 +1326,126 @@ export default function Content() {
               <div className="col-span-2 flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setOpenTeam(false)} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
                 <button type="button" disabled={saving} onClick={saveTeam} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
+                  <Save size={16} />
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openEditCatSection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <h3 className="text-lg font-bold text-slate-900">{selectedCatSection ? 'Edit' : 'New'} Category Section</h3>
+              <button onClick={() => { setOpenEditCatSection(false); setSelectedCatSection(null); }} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Section Title</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={catSectionForm.title} onChange={(e) => setCatSectionForm({ ...catSectionForm, title: e.target.value })} placeholder="e.g., Bedroom Collection" />
+              </div>
+              <div className="col-span-1">
+                <label className="text-xs font-semibold text-slate-500">Position</label>
+                <input type="number" className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={catSectionForm.position} onChange={(e) => setCatSectionForm({ ...catSectionForm, position: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Heading</label>
+                <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={catSectionForm.heading} onChange={(e) => setCatSectionForm({ ...catSectionForm, heading: e.target.value })} placeholder="e.g., Explore Bedrooms" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Description</label>
+                <textarea className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" rows={2} value={catSectionForm.text} onChange={(e) => setCatSectionForm({ ...catSectionForm, text: e.target.value })} placeholder="Optional description" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">
+                  <input type="checkbox" checked={catSectionForm.active} onChange={(e) => setCatSectionForm({ ...catSectionForm, active: e.target.checked })} className="mr-2" />
+                  Active
+                </label>
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Categories</label>
+                <div className="mt-2 p-2 border border-slate-200 rounded-md bg-white">
+                  <input
+                    type="text"
+                    placeholder="Search categories..."
+                    value={catSectionSearch}
+                    onChange={(e) => setCatSectionSearch(e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded mb-2"
+                  />
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {filteredCategoryForCatSection.map((cat) => (
+                      <label key={cat._id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded text-xs cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={catSectionForm.categoryIds.includes(cat._id)}
+                          onChange={() => toggleCategorySectionCategory(cat._id)}
+                        />
+                        <span>{cat.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Selected: {catSectionForm.categoryIds.length} categor{catSectionForm.categoryIds.length === 1 ? 'y' : 'ies'}</p>
+              </div>
+
+              {catSectionForm.categoryIds.length > 0 && (() => {
+                const selectedCatNames = categories
+                  .filter((c) => catSectionForm.categoryIds.includes(c._id))
+                  .map((c) => c.name);
+                const availableProducts = products.filter((p) =>
+                  !!p.category && selectedCatNames.includes(p.category)
+                );
+                const q = catSectionProductSearch.trim().toLowerCase();
+                const visibleProducts = q
+                  ? availableProducts.filter((p) => p.title.toLowerCase().includes(q))
+                  : availableProducts;
+                return (
+                  <div className="col-span-2">
+                    <label className="text-xs font-semibold text-slate-500">
+                      Products from selected categories
+                    </label>
+                    {availableProducts.length === 0 ? (
+                      <p className="text-xs text-slate-400 mt-2">No products found in selected categories.</p>
+                    ) : (
+                      <div className="mt-2 p-2 border border-slate-200 rounded-md bg-white">
+                        <input
+                          type="text"
+                          placeholder="Search products..."
+                          value={catSectionProductSearch}
+                          onChange={(e) => setCatSectionProductSearch(e.target.value)}
+                          className="w-full px-2 py-1 text-xs border border-slate-200 rounded mb-2"
+                        />
+                        <div className="max-h-52 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-1">
+                          {visibleProducts.map((p) => (
+                            <label key={p._id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded text-xs cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={catSectionForm.productIds.includes(p._id)}
+                                onChange={() => toggleCategorySectionProduct(p._id)}
+                              />
+                              <span className="truncate">{p.title}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Selected: {catSectionForm.productIds.length} product{catSectionForm.productIds.length === 1 ? '' : 's'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {error && <div className="col-span-2 text-sm text-red-600">{error}</div>}
+
+              <div className="col-span-2 flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => { setOpenEditCatSection(false); setSelectedCatSection(null); }} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
+                <button type="button" disabled={saving} onClick={saveCategorySection} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
                   <Save size={16} />
                   {saving ? 'Saving...' : 'Save'}
                 </button>

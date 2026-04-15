@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "../util/api";
+import { formatPKR } from "../util/formatCurrency";
 
 const defaultSpecs = ["Material", "Dimensions", "Weight", "Warranty", "Assembly"];
 
@@ -141,7 +142,7 @@ export default function ProductComparison() {
                       <img src={p.img} alt={p.title} className="cmp-product-img" />
                     </div>
                     <strong className="cmp-product-name">{p.title}</strong>
-                    <span className="cmp-product-price">{p.price}</span>
+                    <span className="cmp-product-price">{formatPKR(p.price)}<span style={{fontSize: "11px", color: "#9ca3af", marginLeft: "4px"}}>{p.priceUnit || "per yard"}</span></span>
                     <a href={`/shop/${p._id}`} className="cmp-add-btn">View</a>
                   </th>
                 ))}
@@ -186,7 +187,7 @@ export default function ProductComparison() {
               <img src={products[active].img} alt={products[active].title} className="cmp-card-img" />
               <div className="cmp-card-info">
                 <strong className="cmp-card-name">{products[active].title}</strong>
-                <span className="cmp-card-price">{products[active].price}</span>
+                <span className="cmp-card-price">{formatPKR(products[active].price)}<span style={{fontSize: "11px", color: "#9ca3af", marginLeft: "4px"}}>{products[active].priceUnit || "per yard"}</span></span>
                 <a href={`/shop/${products[active]._id}`} className="cmp-add-btn cmp-add-btn-full">View</a>
               </div>
             </div>

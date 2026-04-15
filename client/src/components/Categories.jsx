@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiGet } from "../util/api";
 
 export default function Categories() {
@@ -24,7 +25,7 @@ export default function Categories() {
   const movingItems = [...items, ...items];
 
   return (
-    <section className="section-pad pb-0 categories-showcase">
+    <section className="categories-showcase" style={{ padding: '2rem 0 1rem' }}>
       <div className="container">
         <div className="section-heading text-center mb-4">
           <span className="section-label">Browse</span>
@@ -35,7 +36,7 @@ export default function Categories() {
         <div className="categories-orb-marquee" aria-label="Shop categories">
           <div className="categories-orb-track">
             {movingItems.map((cat, index) => (
-              <a href="/shop" className="category-orb" key={`${cat._id}-${index}`}>
+              <Link to={`/shop?category=${encodeURIComponent(cat.name)}`} className="category-orb" key={`${cat._id}-${index}`}>
                 <div className="category-orb-media">
                   <img src={cat.img} alt={cat.name} className="img-fluid" loading="lazy" />
                   <span className="category-orb-glow" aria-hidden="true" />
@@ -44,7 +45,7 @@ export default function Categories() {
                   <h3 className="fs-6 fw-semibold text-dark mb-0">{cat.name}</h3>
                   <span className="small text-muted">{cat.count || 0} items</span>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

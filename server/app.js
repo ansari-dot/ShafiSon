@@ -18,6 +18,7 @@ import contactLeadRoutes from "./routes/contactLeadRoutes.js";
 import aboutTeamRoutes from "./routes/aboutTeamRoutes.js";
 import subscriberRoutes from "./routes/subscriberRoutes.js";
 import heroBannerRoutes from "./routes/heroBannerRoutes.js";
+import categorySectionRoutes from "./routes/categorySectionRoutes.js";
 
 import { connectDB } from "./config/db.js";
 
@@ -88,6 +89,7 @@ app.use("/api/contacts", contactLeadRoutes);
 app.use("/api/about-team", aboutTeamRoutes);
 app.use("/api/subscribers", subscriberRoutes);
 app.use("/api/hero-banner", heroBannerRoutes);
+app.use("/api/category-sections", categorySectionRoutes);
 
 
 export default app;
