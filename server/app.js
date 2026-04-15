@@ -22,11 +22,13 @@ import categorySectionRoutes from "./routes/categorySectionRoutes.js";
 
 import { connectDB } from "./config/db.js";
 import { cache, invalidateCache } from "./middlewares/cache.js";
+import { logger } from "./middlewares/logger.js";
 
 dotenv.config();
 
 const app = express();
 app.use(compression());
+app.use(logger);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 const allowedOrigins = [
