@@ -129,7 +129,7 @@ export default function Home() {
   };
 
   return (
-    <main>
+    <main className="home-page">
       <Hero
         title={
           <>

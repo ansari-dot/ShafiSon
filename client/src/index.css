@@ -77,6 +77,18 @@ svg {
     padding: 4rem 0;
 }
 
+.home-page .section-pad {
+    padding: 2.5rem 0;
+}
+
+.home-page .home-section-divider {
+    padding: 0;
+}
+
+.home-page .categories-showcase {
+    padding: 1.25rem 0 0.5rem !important;
+}
+
 .btn-dark {
     font-weight: 600;
     padding: 12px 30px;
@@ -2728,31 +2740,43 @@ body.sp-drawer-open {
 
 .sp-badge {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    top: 12px;
+    left: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 2px 0;
-    border-radius: 0;
-    border-bottom: 1px solid currentColor;
-    background: transparent !important;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    background: #fff;
+    line-height: 1;
+    z-index: 3;
 }
 
 .sp-badge-sale {
-    background: #fee2e2;
+    background: #fff1f2;
     color: #dc2626;
+    border-color: #fecdd3;
 }
 
 .sp-badge-new {
-    background: #dbeafe;
+    background: #eff6ff;
     color: #2563eb;
+    border-color: #bfdbfe;
 }
 
 .sp-badge-popular {
-    background: #fef3c7;
+    background: #fffbeb;
     color: #b45309;
+    border-color: #fde68a;
+}
+
+.sp-badge-bestseller {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
 }
 
 .sp-badge-bestseller {
@@ -3513,7 +3537,7 @@ body.sp-drawer-open {
 
 .pd-main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
     gap: 3.5rem;
     align-items: start;
     background: #fff;
@@ -3594,12 +3618,12 @@ body.sp-drawer-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 340px;
+    min-height: 380px;
 }
 
 .pd-main-img {
     width: 100%;
-    max-height: 420px;
+    max-height: 460px;
     object-fit: contain;
     padding: 1.5rem;
     transition: transform 0.4s ease;
@@ -3671,10 +3695,10 @@ body.sp-drawer-open {
         flex-shrink: 0;
     }
     .pd-main-img-wrap {
-        min-height: 260px;
+        min-height: 280px;
     }
     .pd-main-img {
-        max-height: 300px;
+        max-height: 330px;
     }
 }
 
@@ -3697,10 +3721,10 @@ body.sp-drawer-open {
         font-size: 1.4rem;
     }
     .pd-main-img-wrap {
-        min-height: 220px;
+        min-height: 210px;
     }
     .pd-main-img {
-        max-height: 240px;
+        max-height: 220px;
     }
     .pd-thumbs-mobile .pd-thumb {
         width: 56px;
@@ -3729,6 +3753,7 @@ body.sp-drawer-open {
     display: flex;
     flex-direction: column;
     gap: 0;
+    min-width: 0;
 }
 
 .pd-info-top {
@@ -3748,11 +3773,13 @@ body.sp-drawer-open {
 
 .pd-out-badge {
     font-size: 11px;
-    font-weight: 700;
-    background: #fee2e2;
+    font-weight: 800;
+    background: #fff1f2;
     color: #dc2626;
-    padding: 2px 9px;
-    border-radius: 5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #fecdd3;
+    line-height: 1;
 }
 
 .pd-title {
@@ -3815,11 +3842,13 @@ body.sp-drawer-open {
 
 .pd-discount {
     font-size: 12px;
-    font-weight: 700;
-    background: #dcfce7;
+    font-weight: 800;
+    background: #ecfdf5;
     color: #16a34a;
-    padding: 3px 9px;
-    border-radius: 5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #bbf7d0;
+    line-height: 1;
 }
 
 .pd-desc {
@@ -4387,14 +4416,15 @@ body.sp-drawer-open {
 
 .pd-related-img-wrap {
     background: #f4f6f5;
-    padding: 1rem;
-    text-align: center;
+    height: 180px;
+    overflow: hidden;
+    position: relative;
 }
 
 .pd-related-img {
-    height: 100px;
+    height: 100%;
     width: 100%;
-    object-fit: contain;
+    object-fit: cover;
     transition: transform 0.3s;
 }
 
@@ -4467,6 +4497,7 @@ body.sp-drawer-open {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.95rem;
+    align-items: start;
 }
 
 .pd-browse-card {
@@ -4474,21 +4505,21 @@ body.sp-drawer-open {
     text-decoration: none;
     border-bottom: 1px solid #e3ddd1;
     padding-bottom: 0.65rem;
+    max-width: 240px;
 }
 
 .pd-browse-img-wrap {
     border: 1px solid #e3ddd1;
-    height: 140px;
-    display: grid;
-    place-items: center;
+    height: 185px;
+    overflow: hidden;
     margin-bottom: 0.55rem;
+    position: relative;
 }
 
 .pd-browse-img {
-    width: auto;
-    height: 112px;
-    max-width: 92%;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .pd-browse-name {
@@ -4504,9 +4535,86 @@ body.sp-drawer-open {
     color: var(--dark);
 }
 
+.pd-card-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(8px);
+    transition: 0.2s all ease;
+    z-index: 2;
+}
+
+.pd-related-card:hover .pd-card-actions,
+.pd-browse-card:hover .pd-card-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.pd-card-action-btn {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #d8ccba;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: 0.15s all ease;
+    text-decoration: none;
+}
+
+.pd-card-action-btn:hover {
+    background: var(--dark);
+    color: #fff;
+    border-color: var(--dark);
+}
+
+.pd-card-cart-btn {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: none;
+    border-top: 1px solid #e6ddd0;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--dark);
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    z-index: 2;
+}
+
+.pd-related-card:hover .pd-card-cart-btn,
+.pd-browse-card:hover .pd-card-cart-btn {
+    transform: translateY(0);
+}
+
+.pd-card-cart-btn:hover {
+    background: #f6f1e7;
+}
+
 @media (max-width: 900px) {
     .pd-browse-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pd-browse-card {
+        max-width: none;
     }
 }
 
@@ -6867,22 +6975,23 @@ body.sp-drawer-open {
 }
 
 .sp-badge-deal {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fdba74;
 }
 
 .pd-deal-badge {
     margin-left: 10px;
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-    padding: 2px 8px;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fdba74;
+    padding: 5px 10px;
     border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    line-height: 1;
 }
 
 .sp-badge-flash {
@@ -8022,12 +8131,13 @@ body.sp-drawer-open {
 
 .pd-low-badge {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     color: #92400e;
-    background: #fef3c7;
+    background: #fffbeb;
     border: 1px solid #fde68a;
     border-radius: 999px;
-    padding: 3px 8px;
+    padding: 5px 10px;
+    line-height: 1;
 }
 
 .wl-stock-badge {
@@ -8971,31 +9081,21 @@ body.sp-drawer-open {
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: crosshair;
+    cursor: zoom-in;
     overflow: hidden;
 }
 
 .pd-zoom-wrap .pd-main-img {
-    /* disable the old CSS hover scale — zoom replaces it */
-    transition: none;
+    transition: transform 0.18s ease-out;
+    will-change: transform;
 }
 
 .pd-zoom-wrap:hover .pd-main-img {
     transform: none;
 }
 
-.pd-zoom-lens {
-    position: absolute;
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    border: 2px solid rgba(46, 13, 16, 0.25);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
-    background-repeat: no-repeat;
-    pointer-events: none;
-    z-index: 20;
-    /* subtle glass ring */
-    backdrop-filter: none;
+.pd-zoom-wrap.is-zoomed {
+    cursor: zoom-out;
 }
 
 

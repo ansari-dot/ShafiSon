@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
@@ -62,54 +62,54 @@ const CheckIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
   </svg>
 );
+const EyeIcon = () => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
-const ZOOM = 2.5;
-const LENS = 130; // lens diameter px
+const ZOOM = 2.1;
 
 function ImageZoom({ src, alt }) {
   const wrapRef = useRef(null);
-  const [lens, setLens] = useState(null); // { x, y } cursor pos relative to wrap
+  const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+  const [isZoomed, setIsZoomed] = useState(false);
 
-  const onMove = useCallback((e) => {
+  const onMove = (e) => {
     const wrap = wrapRef.current;
     if (!wrap) return;
     const rect = wrap.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    setLens({ x, y });
-  }, []);
+    const originX = `${(x / rect.width) * 100}%`;
+    const originY = `${(y / rect.height) * 100}%`;
+    setZoomOrigin(`${originX} ${originY}`);
+    setIsZoomed(true);
+  };
 
-  const onLeave = useCallback(() => setLens(null), []);
-
-  // clamp lens center so it stays inside the image
-  const half = LENS / 2;
-  const lensX = lens ? Math.min(Math.max(lens.x, half), (wrapRef.current?.offsetWidth || 0) - half) : 0;
-  const lensY = lens ? Math.min(Math.max(lens.y, half), (wrapRef.current?.offsetHeight || 0) - half) : 0;
-
-  // background-position: shift so the zoomed area is centred under the lens
-  const bgX = lens ? -(lensX * ZOOM - half) : 0;
-  const bgY = lens ? -(lensY * ZOOM - half) : 0;
+  const onLeave = () => {
+    setIsZoomed(false);
+    setZoomOrigin("50% 50%");
+  };
 
   return (
     <div
       ref={wrapRef}
-      className="pd-zoom-wrap"
+      className={`pd-zoom-wrap ${isZoomed ? "is-zoomed" : ""}`}
       onMouseMove={onMove}
+      onMouseEnter={onMove}
       onMouseLeave={onLeave}
     >
-      <img src={src} alt={alt} className="pd-main-img" />
-      {lens && (
-        <div
-          className="pd-zoom-lens"
-          style={{
-            left: lensX - half,
-            top: lensY - half,
-            backgroundImage: `url(${src})`,
-            backgroundSize: `${(wrapRef.current?.offsetWidth || 0) * ZOOM}px ${(wrapRef.current?.offsetHeight || 0) * ZOOM}px`,
-            backgroundPosition: `${bgX}px ${bgY}px`,
-          }}
-        />
-      )}
+      <img
+        src={src}
+        alt={alt}
+        className="pd-main-img"
+        style={{
+          transformOrigin: zoomOrigin,
+          transform: isZoomed ? `scale(${ZOOM})` : "scale(1)",
+        }}
+      />
     </div>
   );
 }
@@ -141,6 +141,47 @@ function AccordionItem({ title, children }) {
       </button>
       {open && <div className="pd-accordion-body">{children}</div>}
     </div>
+  );
+}
+
+function HoverProductActions({ item, wished, onWish, onAdd }) {
+  return (
+    <>
+      <div className="pd-card-actions">
+        <button
+          type="button"
+          className="pd-card-action-btn"
+          aria-label="Wishlist"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onWish(item);
+          }}
+          style={{ color: wished ? "#ef4444" : undefined }}
+        >
+          <HeartIcon active={wished} />
+        </button>
+        <Link
+          to={`/shop/${item._id}`}
+          className="pd-card-action-btn"
+          aria-label="View product"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <EyeIcon />
+        </Link>
+      </div>
+      <button
+        type="button"
+        className="pd-card-cart-btn"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onAdd(item);
+        }}
+      >
+        <CartIcon /> Add to Cart
+      </button>
+    </>
   );
 }
 
@@ -197,6 +238,35 @@ export default function ProductDetail() {
     });
     setWished(activeWish);
   };
+
+  const handleCardWishlist = (item) => {
+    toggleWishlist({
+      id: item._id,
+      title: item.title,
+      img: item.img,
+      price: item.price,
+      priceUnit: item.priceUnit || "per yard",
+      category: item.category,
+    });
+  };
+
+  const handleCardAddToCart = (item) => {
+    addToCart({
+      id: item._id,
+      title: item.title,
+      img: item.img,
+      unitPrice: Number(item.price || 0),
+      originalPrice: Number(item.price || 0),
+      priceUnit: item.priceUnit || "per yard",
+      isDeal: !!item.isDeal,
+      size: "",
+      color: "",
+      colorHex: "",
+      sku: item.sku || "",
+      subcategorySerial: item.subcategorySerial || "",
+    }, 1);
+  };
+
 
   if (loading) {
     return (
@@ -275,6 +345,7 @@ export default function ProductDetail() {
     }, qty);
     setTimeout(() => setAdded(false), 2000);
   };
+
 
   const badgeClass = (b) => {
     if (!b) return "";
@@ -580,6 +651,12 @@ export default function ProductDetail() {
                 <Link to={`/shop/${item._id}`} key={item._id} className="pd-related-card">
                   <div className="pd-related-img-wrap">
                     <img src={item.img} alt={item.title} className="pd-related-img" />
+                    <HoverProductActions
+                      item={item}
+                      wished={hasInWishlist(item._id)}
+                      onWish={handleCardWishlist}
+                      onAdd={handleCardAddToCart}
+                    />
                   </div>
                   <div className="pd-related-info">
                     <span className="pd-cat-label">{item.category}</span>
@@ -606,6 +683,12 @@ export default function ProductDetail() {
                 <Link to={`/shop/${item._id}`} key={item._id} className="pd-browse-card">
                   <div className="pd-browse-img-wrap">
                     <img src={item.img} alt={item.title} className="pd-browse-img" />
+                    <HoverProductActions
+                      item={item}
+                      wished={hasInWishlist(item._id)}
+                      onWish={handleCardWishlist}
+                      onAdd={handleCardAddToCart}
+                    />
                   </div>
                   <p className="pd-browse-name">{item.title}</p>
                   <strong className="pd-browse-price">{formatPKR(item.price)}</strong>
