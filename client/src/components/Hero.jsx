@@ -1,4 +1,4 @@
-import heroBannerImage from "../assets/hero.svg";
+import heroBannerImage from "../assets/hero.webp";
 
 export default function Hero() {
   return (

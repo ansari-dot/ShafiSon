@@ -34,6 +34,22 @@ body {
     background-color: var(--lightbg);
 }
 
+:root {
+    --site-navbar-offset: 176px;
+}
+
+.site-content {
+    min-width: 0;
+}
+
+.site-shell-inner .site-content {
+    padding-top: var(--site-navbar-offset);
+}
+
+.site-shell-home .site-content {
+    padding-top: 0;
+}
+
 a {
     text-decoration: none;
     color: var(--dark);
@@ -7160,6 +7176,10 @@ body.sp-drawer-open {
 }
 
 @media (max-width: 900px) {
+    :root {
+        --site-navbar-offset: 102px;
+    }
+
     .nb-logo-img,
     .nb-logo-center .nb-logo-img {
         height: 64px;
@@ -7192,6 +7212,10 @@ body.sp-drawer-open {
 }
 
 @media (max-width: 680px) {
+    :root {
+        --site-navbar-offset: 118px;
+    }
+
     .nb-topbar-inner {
         flex-wrap: wrap;
         justify-content: center;

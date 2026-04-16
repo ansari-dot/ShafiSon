@@ -6,15 +6,18 @@ import PromoBar from "./PromoBar";
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
   return (
-    <div>
+    <div className={`site-shell${isHomePage ? " site-shell-home" : " site-shell-inner"}`}>
       <Navbar />
-      <Outlet />
+      <main className="site-content">
+        <Outlet />
+      </main>
       <Footer />
     </div>
   );
