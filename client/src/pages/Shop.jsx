@@ -111,7 +111,9 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
   const lowStock = isLowStock(item);
   const quantity = getQuantity(item);
   const dealPrice = dealActive ? getDealPrice(item.price, deal) : null;
-  const hoverImg = item?.imgs?.[0] && item.imgs[0] !== item.img ? item.imgs[0] : null;
+  const hoverImg = Array.isArray(item?.imgs)
+    ? item.imgs.find((src) => src && src !== item.img) || null
+    : null;
   const [hovered, setHovered] = useState(false);
   const handleAdd = () => {
     if (outOfStock) return;

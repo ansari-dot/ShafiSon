@@ -34,7 +34,9 @@ function SectionDivider() {
 
 function ProductCard({ item }) {
   const [hovered, setHovered] = useState(false);
-  const hoverImg = item?.imgs?.[0] && item.imgs[0] !== item.img ? item.imgs[0] : null;
+  const hoverImg = Array.isArray(item?.imgs)
+    ? item.imgs.find((src) => src && src !== item.img) || null
+    : null;
 
   return (
     <div className="home-collection-modern-card">

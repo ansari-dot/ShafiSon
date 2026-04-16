@@ -69,6 +69,11 @@ function CollectionCard({ item, hoverImg }) {
   );
 }
 
+function getHoverImage(item) {
+  if (!Array.isArray(item?.imgs)) return null;
+  return item.imgs.find((src) => src && src !== item.img) || null;
+}
+
 export default function Home() {
   usePageMeta({
     title: "ShafiSons | Premium Curtains, Sofa Fabrics & Blinds",
@@ -173,7 +178,7 @@ export default function Home() {
 
             <div className="home-collection-modern-grid" ref={collectionGridRef}>
               {collectionProducts.map((item) => {
-                const hoverImg = item?.imgs?.[0] && item.imgs[0] !== item.img ? item.imgs[0] : null;
+                const hoverImg = getHoverImage(item);
                 return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
               })}
             </div>
@@ -206,7 +211,7 @@ export default function Home() {
           </div>
           <div className="cat-section-grid">
             {popularProducts.map((item) => {
-              const hoverImg = item?.imgs?.[0] && item.imgs[0] !== item.img ? item.imgs[0] : null;
+              const hoverImg = getHoverImage(item);
               return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
             })}
           </div>
