@@ -1,5 +1,10 @@
 import Product from "../models/Product.js";
 
+const LIST_PRODUCT_PROJECTION = {
+  description: 0,
+  specs: 0,
+};
+
 function isValidObjectId(id) {
   return id && id.match(/^[0-9a-fA-F]{24}$/);
 }
@@ -37,6 +42,7 @@ function normalizeProductDoc(product) {
 export async function getProducts(req, res) {
   try {
     const { search, ids, page, limit } = req.query;
+    const searchText = String(search || "").trim();
 
     // ids mode — no pagination (used internally)
     if (ids) {
@@ -47,19 +53,28 @@ export async function getProducts(req, res) {
       return res.json(products.map(normalizeProductDoc));
     }
 
-    const filter = search
-      ? { $or: [
-          { title: { $regex: String(search).trim(), $options: "i" } },
-          { sku:   { $regex: String(search).trim(), $options: "i" } },
-        ]}
+    const escapedSearch = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const filter = searchText
+      ? {
+          $or: [
+            { $text: { $search: searchText } },
+            { sku: { $regex: `^${escapedSearch}`, $options: "i" } },
+          ],
+        }
       : {};
 
     const pageNum  = Math.max(1, parseInt(page)  || 1);
     const limitNum = Math.max(1, parseInt(limit) || 20);
     const skip     = (pageNum - 1) * limitNum;
+    const sort = searchText
+      ? { score: { $meta: "textScore" }, createdAt: -1 }
+      : { createdAt: -1 };
+    const projection = searchText
+      ? { ...LIST_PRODUCT_PROJECTION, score: { $meta: "textScore" } }
+      : LIST_PRODUCT_PROJECTION;
 
     const [products, total] = await Promise.all([
-      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Product.find(filter, projection).sort(sort).skip(skip).limit(limitNum).lean(),
       Product.countDocuments(filter),
     ]);
 

@@ -36,6 +36,11 @@ productSchema.index({ createdAt: -1 });
 productSchema.index({ title: 1 });
 productSchema.index({ category: 1 });
 productSchema.index({ isDeal: 1 });
+productSchema.index({ category: 1, createdAt: -1 });
+productSchema.index({ isDeal: 1, createdAt: -1 });
+productSchema.index({ material: 1, createdAt: -1 });
+productSchema.index({ badge: 1, createdAt: -1 });
+productSchema.index({ quantity: 1 });
 productSchema.index({ title: "text", sku: "text", category: "text" });
 
 export default mongoose.model("Product", productSchema);

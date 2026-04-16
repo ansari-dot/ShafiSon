@@ -149,14 +149,20 @@ svg {
 /* ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 .hero-with-banner {
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    padding: 15rem 0 12rem;
     position: relative;
     overflow: hidden;
     min-height: 750px;
+    background: #f3ede2;
+}
+
+.hero-banner-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
 }
 
 .hero-overlay {
@@ -6102,8 +6108,14 @@ body.sp-drawer-open {
 @media (max-width: 768px) {
     .hero,
     .hero-with-banner {
-        padding: 15rem 0 12rem;
-        min-height: 750px;
+        padding: 0;
+        min-height: auto;
+    }
+    .hero-banner-media {
+        position: relative;
+        inset: auto;
+        height: auto;
+        object-position: center center;
     }
     .hero-copy-col {
         padding-top: 0;
@@ -6159,8 +6171,13 @@ body.sp-drawer-open {
 @media (max-width: 520px) {
     .hero,
     .hero-with-banner {
-        padding: 15rem 0 12rem;
-        min-height: 750px;
+        padding: 0;
+        min-height: auto;
+    }
+    .hero-banner-media {
+        object-fit: contain;
+        object-position: center center;
+        background: #f3ede2;
     }
     .hero-title {
         font-size: 1.6rem !important;
@@ -7289,6 +7306,10 @@ body.sp-drawer-open {
         --site-navbar-offset: 102px;
     }
 
+    .site-shell-home .site-content {
+        padding-top: calc(var(--site-navbar-offset) - 14px);
+    }
+
     .nb-logo-img,
     .nb-logo-center .nb-logo-img {
         height: 64px;
@@ -7323,6 +7344,10 @@ body.sp-drawer-open {
 @media (max-width: 680px) {
     :root {
         --site-navbar-offset: 118px;
+    }
+
+    .site-shell-home .site-content {
+        padding-top: calc(var(--site-navbar-offset) - 16px);
     }
 
     .nb-topbar-inner {
@@ -9200,6 +9225,32 @@ body.sp-drawer-open {
 
 .section-pad-sm {
     padding: 1.5rem 0 4rem;
+}
+
+.home-store-map-only {
+    padding: 2rem 0 3rem;
+}
+
+.home-store-map-only-frame {
+    overflow: hidden;
+    border: 1px solid rgba(46, 13, 16, 0.1);
+}
+
+.home-store-map-only-frame iframe {
+    width: 100%;
+    height: 420px;
+    border: 0;
+    display: block;
+}
+
+@media (max-width: 576px) {
+    .home-store-map-only {
+        padding: 1.5rem 0 2.5rem;
+    }
+
+    .home-store-map-only-frame iframe {
+        height: 320px;
+    }
 }
 
 

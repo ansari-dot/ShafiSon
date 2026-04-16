@@ -8,6 +8,7 @@ import CategorySections from "../components/CategorySections";
 import HowItWorks from "../components/HowItWorks";
 import ProductComparison from "../components/ProductComparison";
 import FAQ from "../components/FAQ";
+import HomeStoreLocation from "../components/HomeStoreLocation";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 import usePageMeta from "../util/usePageMeta";
@@ -224,6 +225,8 @@ export default function Home() {
       <TestimonialSlider />
 
       <FAQ />
+
+      <HomeStoreLocation />
 
       <Newsletter />
     </main>
