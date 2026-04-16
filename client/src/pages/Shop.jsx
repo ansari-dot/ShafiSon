@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import ShopHero from "../components/ShopHero";
 import { formatPKR } from "../util/formatCurrency";
-import { apiGet } from "../util/api";
+import { apiGet, resolveAssetUrl } from "../util/api";
 import { addToCart } from "../util/cart";
 import { getWishlist, toggleWishlist } from "../wishlist";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
@@ -111,8 +111,9 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
   const lowStock = isLowStock(item);
   const quantity = getQuantity(item);
   const dealPrice = dealActive ? getDealPrice(item.price, deal) : null;
+  const mainImg = resolveAssetUrl(item?.img);
   const hoverImg = Array.isArray(item?.imgs)
-    ? item.imgs.find((src) => src && src !== item.img) || null
+    ? item.imgs.map(resolveAssetUrl).find((src) => src && src !== mainImg) || null
     : null;
   const [hovered, setHovered] = useState(false);
   const handleAdd = () => {
@@ -141,7 +142,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
       <div className="sp-card-img-wrap">
         <Link to={`/shop/${item._id}`}>
           <img
-            src={hovered && hoverImg ? hoverImg : item.img}
+            src={hovered && hoverImg ? hoverImg : mainImg}
             alt={item.title}
             className="sp-card-img"
             style={{ transition: "opacity 0.25s ease" }}

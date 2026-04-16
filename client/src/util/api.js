@@ -7,6 +7,18 @@ function buildUrl(path) {
   return `${API_BASE}${path}`;
 }
 
+export function resolveAssetUrl(path) {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^(?:https?:)?\/\//i.test(value) || value.startsWith("data:") || value.startsWith("blob:")) {
+    return value;
+  }
+  if (value.startsWith("/images/")) {
+    return value;
+  }
+  return `${API_BASE}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
 function clearGetCache() {
   responseCache.clear();
   inflightRequests.clear();

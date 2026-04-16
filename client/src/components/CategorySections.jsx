@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../util/api";
+import { apiGet, resolveAssetUrl } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 
 const EyeIcon = () => (
@@ -34,8 +34,9 @@ function SectionDivider() {
 
 function ProductCard({ item }) {
   const [hovered, setHovered] = useState(false);
+  const mainImg = resolveAssetUrl(item?.img);
   const hoverImg = Array.isArray(item?.imgs)
-    ? item.imgs.find((src) => src && src !== item.img) || null
+    ? item.imgs.map(resolveAssetUrl).find((src) => src && src !== mainImg) || null
     : null;
 
   return (
@@ -58,7 +59,7 @@ function ProductCard({ item }) {
         </div>
         <div className="home-collection-modern-cta" aria-hidden="true">Shop Now →</div>
         <img
-          src={hovered && hoverImg ? hoverImg : item.img}
+          src={hovered && hoverImg ? hoverImg : mainImg}
           alt={item.title}
           loading="lazy"
           style={{ transition: "opacity 0.25s ease" }}

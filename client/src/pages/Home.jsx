@@ -9,7 +9,7 @@ import HowItWorks from "../components/HowItWorks";
 import ProductComparison from "../components/ProductComparison";
 import FAQ from "../components/FAQ";
 import HomeStoreLocation from "../components/HomeStoreLocation";
-import { apiGet } from "../util/api";
+import { apiGet, resolveAssetUrl } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 import usePageMeta from "../util/usePageMeta";
 
@@ -34,6 +34,7 @@ const EyeIcon = () => (
 
 function CollectionCard({ item, hoverImg }) {
   const [hovered, setHovered] = useState(false);
+  const mainImg = resolveAssetUrl(item?.img);
   return (
     <a
       href={`/shop/${item._id}`}
@@ -53,7 +54,7 @@ function CollectionCard({ item, hoverImg }) {
         </div>
         <div className="home-collection-modern-cta" aria-hidden="true">Shop Now →</div>
         <img
-          src={hovered && hoverImg ? hoverImg : item.img}
+          src={hovered && hoverImg ? hoverImg : mainImg}
           alt={item.title}
           loading="lazy"
           style={{ transition: "opacity 0.25s ease" }}
@@ -71,7 +72,8 @@ function CollectionCard({ item, hoverImg }) {
 
 function getHoverImage(item) {
   if (!Array.isArray(item?.imgs)) return null;
-  return item.imgs.find((src) => src && src !== item.img) || null;
+  const mainImg = resolveAssetUrl(item?.img);
+  return item.imgs.map(resolveAssetUrl).find((src) => src && src !== mainImg) || null;
 }
 
 export default function Home() {
