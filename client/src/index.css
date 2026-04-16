@@ -7043,6 +7043,17 @@ body.sp-drawer-open {
     border-bottom: 1px solid #dfd2ba;
 }
 
+.nb-topbar.nb-topbar-home {
+    background: rgba(26, 7, 9, 0.14);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+.nb-topbar.nb-topbar-home .nb-topbar-text,
+.nb-topbar.nb-topbar-home .nb-topbar-link {
+    color: rgba(255, 255, 255, 0.92);
+}
+
 .nb-topbar-inner {
     min-height: 28px;
 }
@@ -7064,6 +7075,13 @@ body.sp-drawer-open {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(12px);
     box-shadow: 0 4px 26px rgba(47, 17, 23, 0.22);
+}
+
+.nb-nav.nb-home-overlay {
+    background: rgba(26, 7, 9, 0.14);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    box-shadow: none;
 }
 
 .nb-nav.nb-scrolled {

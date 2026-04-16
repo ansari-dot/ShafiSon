@@ -49,6 +49,7 @@ const ChevronDownIcon = ({ open = false }) => (
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isHomePage = location.pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -191,7 +192,7 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="nb-topbar">
+      <div className={`nb-topbar${isHomePage && !scrolled ? " nb-topbar-home" : ""}`}>
         <div className="container">
           <div className="nb-topbar-inner">
             <p className="nb-topbar-text">Free Delivery in Quetta on Orders Above PKR 10,000</p>
@@ -203,7 +204,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className="nb-nav nb-scrolled">
+      <nav className={`nb-nav${scrolled || !isHomePage ? " nb-scrolled" : " nb-home-overlay"}`}>
         <div className="container">
           <div className="nb-main-row">
             <form className="nb-search-slot" onSubmit={submitSearch}>
