@@ -47,7 +47,7 @@ export async function getProducts(req, res) {
     // ids mode — no pagination (used internally)
     if (ids) {
       const list = String(ids).split(",").map((s) => s.trim()).filter(Boolean);
-      const products = await Product.find({ _id: { $in: list } }).lean();
+      const products = await Product.find({ _id: { $in: list } }, LIST_PRODUCT_PROJECTION).lean();
       const order = new Map(list.map((id, i) => [id, i]));
       products.sort((a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0));
       return res.json(products.map(normalizeProductDoc));

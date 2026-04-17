@@ -75,15 +75,15 @@ app.use((req, res, next) => {
 await connectDB();
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-app.use("/api/products", cache(60), productRoutes);
-app.use("/api/categories", cache(120), categoryRoutes);
-app.use("/api/coupons", cache(120), couponRoutes);
-app.use("/api/testimonials", cache(120), testimonialRoutes);
-app.use("/api/home-collection", cache(60), homeCollectionRoutes);
-app.use("/api/compare-section", cache(60), compareSectionRoutes);
-app.use("/api/popular-picks", cache(60), popularPicksRoutes);
-app.use("/api/home-categories", cache(60), homeCategoriesRoutes);
-app.use("/api/deal-section", cache(60), dealSectionRoutes);
+app.use("/api/products", cache(300), productRoutes);
+app.use("/api/categories", cache(300), categoryRoutes);
+app.use("/api/coupons", cache(300), couponRoutes);
+app.use("/api/testimonials", cache(300), testimonialRoutes);
+app.use("/api/home-collection", cache(120), homeCollectionRoutes);
+app.use("/api/compare-section", cache(120), compareSectionRoutes);
+app.use("/api/popular-picks", cache(120), popularPicksRoutes);
+app.use("/api/home-categories", cache(120), homeCategoriesRoutes);
+app.use("/api/deal-section", cache(120), dealSectionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments/payfast", payfastRoutes);
 app.use("/api/dashboard", dashboardRoutes);

@@ -28,10 +28,6 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="container position-relative">
-        <div className="position-absolute d-none d-lg-block" style={{ right: 0, top: "-200px" }}>
-          <img src="/images/sofa.png" alt="Sofa" width="380" />
-        </div>
-
         <div className="mb-5">
           <h3 className="d-flex align-items-center gap-2 text-brand fs-5 fw-medium">
             <img src="/images/envelope-outline.svg" alt="Envelope" width="20" height="20" />

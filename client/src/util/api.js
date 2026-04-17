@@ -1,5 +1,5 @@
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
-const GET_CACHE_TTL_MS = 15000;
+const GET_CACHE_TTL_MS = 300000;
 const responseCache = new Map();
 const inflightRequests = new Map();
 

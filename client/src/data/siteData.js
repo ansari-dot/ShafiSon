@@ -52,16 +52,16 @@ export const categories = [
 
 export const stats = [
   { id: 1, value: "15K+", label: "Happy Customers" },
-  { id: 2, value: "8K+", label: "Products Sold" },
-  { id: 3, value: "120+", label: "Design Awards" },
-  { id: 4, value: "98%", label: "Satisfaction Rate" },
+  { id: 2, value: "8K+", label: "Products Delivered" },
+  { id: 3, value: "45+", label: "Years of Experience" },
+  { id: 4, value: "98%", label: "Customer Satisfaction" },
 ];
 
 export const navLinks = [
   { label: "Home", to: "/" },
+  { label: "About Us", to: "/about" },
   { label: "Shop", to: "/shop" },
-  { label: "About us", to: "/about" },
-  { label: "Contact us", to: "/contact" },
+  { label: "Contact Us", to: "/contact" },
 ];
 
 export const products = [

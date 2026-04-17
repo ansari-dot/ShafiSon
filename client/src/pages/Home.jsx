@@ -8,6 +8,7 @@ import CategorySections from "../components/CategorySections";
 import HowItWorks from "../components/HowItWorks";
 import ProductComparison from "../components/ProductComparison";
 import FAQ from "../components/FAQ";
+import HomeInstagramSection from "../components/HomeInstagramSection";
 import HomeStoreLocation from "../components/HomeStoreLocation";
 import { apiGet, resolveAssetUrl } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
@@ -92,39 +93,31 @@ export default function Home() {
   useEffect(() => {
     let active = true;
 
-    apiGet("/api/hero-banner")
-      .then((doc) => { if (!active) return; setHeroDoc(doc || null); })
-      .catch(() => { if (!active) return; setHeroDoc(null); });
+    Promise.all([
+      apiGet("/api/hero-banner").catch(() => null),
+      apiGet("/api/home-collection").catch(() => null),
+      apiGet("/api/popular-picks").catch(() => null),
+    ]).then(async ([heroData, collectionDoc, popularDoc]) => {
+      if (!active) return;
 
-    apiGet("/api/home-collection")
-      .then((doc) => {
-        if (!active) return;
-        if (doc && doc.productIds && doc.productIds.length) {
-          setCollection(doc);
-          apiGet(`/api/products?ids=${doc.productIds.join(",")}`)
-            .then((list) => { if (!active) return; setCollectionProducts(Array.isArray(list) ? list : []); })
-            .catch(() => { if (!active) return; setCollectionProducts([]); });
-        } else {
-          setCollection(null);
-          setCollectionProducts([]);
-        }
-      })
-      .catch(() => { if (!active) return; setCollection(null); setCollectionProducts([]); });
+      setHeroDoc(heroData || null);
 
-    apiGet("/api/popular-picks")
-      .then((doc) => {
-        if (!active) return;
-        if (doc && doc.productIds && doc.productIds.length) {
-          setPopular(doc);
-          apiGet(`/api/products?ids=${doc.productIds.join(",")}`)
-            .then((list) => { if (!active) return; setPopularProducts(Array.isArray(list) ? list : []); })
-            .catch(() => { if (!active) return; setPopularProducts([]); });
-        } else {
-          setPopular(null);
-          setPopularProducts([]);
-        }
-      })
-      .catch(() => { if (!active) return; setPopular(null); setPopularProducts([]); });
+      const collectionIds = collectionDoc?.productIds?.length ? collectionDoc.productIds : [];
+      const popularIds = popularDoc?.productIds?.length ? popularDoc.productIds : [];
+
+      // Fetch both product lists in parallel
+      const [collectionList, popularList] = await Promise.all([
+        collectionIds.length ? apiGet(`/api/products?ids=${collectionIds.join(",")}`).catch(() => []) : Promise.resolve([]),
+        popularIds.length ? apiGet(`/api/products?ids=${popularIds.join(",")}`).catch(() => []) : Promise.resolve([]),
+      ]);
+
+      if (!active) return;
+
+      setCollection(collectionIds.length ? collectionDoc : null);
+      setCollectionProducts(Array.isArray(collectionList) ? collectionList : []);
+      setPopular(popularIds.length ? popularDoc : null);
+      setPopularProducts(Array.isArray(popularList) ? popularList : []);
+    });
 
     return () => { active = false; };
   }, []);
@@ -232,6 +225,8 @@ export default function Home() {
       <TestimonialSlider />
 
       <FAQ />
+
+      <HomeInstagramSection />
 
       <HomeStoreLocation />
 
