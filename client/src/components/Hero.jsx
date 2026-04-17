@@ -1,23 +1,33 @@
 import { useState, useEffect } from "react";
+import { resolveAssetUrl } from "../util/api";
 import hero from "../assets/hero.webp";
 import hero1 from "../assets/hero1.webp";
 import hero2 from "../assets/hero2.webp";
 
-const slides = [hero, hero1, hero2];
+const fallbackSlides = [hero, hero1, hero2];
 
-export default function Hero() {
+export default function Hero({ slides }) {
+  const resolvedSlides =
+    Array.isArray(slides) && slides.length > 0
+      ? slides.map(resolveAssetUrl)
+      : fallbackSlides;
+
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    setCurrent(0);
+  }, [slides]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
+      setCurrent((prev) => (prev + 1) % resolvedSlides.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [resolvedSlides.length]);
 
   return (
     <section className="hero-with-banner">
-      {slides.map((src, i) => (
+      {resolvedSlides.map((src, i) => (
         <img
           key={i}
           src={src}
@@ -30,7 +40,7 @@ export default function Hero() {
       ))}
       <div className="hero-overlay"></div>
       <div className="hero-dots">
-        {slides.map((_, i) => (
+        {resolvedSlides.map((_, i) => (
           <button
             key={i}
             className={`hero-dot ${i === current ? "hero-dot-active" : ""}`}

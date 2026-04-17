@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { apiPost } from "../util/api";
 
 export default function Footer() {
@@ -24,6 +25,29 @@ export default function Footer() {
       setSaving(false);
     }
   };
+
+  const footerLinks = [
+    [
+      { label: "About us", to: "/about" },
+      { label: "Contact us", to: "/contact" },
+    ],
+    [
+      { label: "Support", to: "/contact" },
+      { label: "Knowledge base", to: "#" },
+      { label: "Live chat", to: "#" },
+    ],
+    [
+      { label: "Jobs", to: "#" },
+      { label: "Our team", to: "/about" },
+      { label: "Leadership", to: "/about" },
+      { label: "Privacy Policy", to: "#" },
+    ],
+    [
+      { label: "Nordic Chair", to: "/shop" },
+      { label: "Kruzo Aero", to: "/shop" },
+      { label: "Ergonomic Chair", to: "/shop" },
+    ],
+  ];
 
   return (
     <footer className="footer">
@@ -85,17 +109,12 @@ export default function Footer() {
 
           <div className="col-lg-8">
             <div className="row">
-              {[
-                ["About us", "Contact us"],
-                ["Support", "Knowledge base", "Live chat"],
-                ["Jobs", "Our team", "Leadership", "Privacy Policy"],
-                ["Nordic Chair", "Kruzo Aero", "Ergonomic Chair"],
-              ].map((group, idx) => (
+              {footerLinks.map((group, idx) => (
                 <div className="col-6 col-md-3" key={idx}>
                   <ul className="list-unstyled">
                     {group.map((item) => (
-                      <li key={item} className="mb-2">
-                        <a href="#">{item}</a>
+                      <li key={item.label} className="mb-2">
+                        <Link to={item.to}>{item.label}</Link>
                       </li>
                     ))}
                   </ul>
