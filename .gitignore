@@ -25,10 +25,3 @@ coverage/
 # Editor
 .vscode/
 .idea/
-
-# Large binary assets (serve from public/ or CDN instead)
-client/src/assets/*.webp
-client/src/assets/*.jpg
-client/src/assets/*.jpeg
-client/src/assets/*.png
-client/src/assets/about us/
