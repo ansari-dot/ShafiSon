@@ -25,9 +25,11 @@ export default function ProductComparison() {
 
   useEffect(() => {
     let activeReq = true;
-    apiGet("/api/compare-section")
-      .then((doc) => {
+    const load = async () => {
+      try {
+        const doc = await apiGet("/api/compare-section").catch(() => null);
         if (!activeReq) return;
+        setSection(doc || null);
         const rawIds = Array.isArray(doc?.productIds) ? doc.productIds : [];
         const ids = rawIds
           .map((id) => {
@@ -38,65 +40,18 @@ export default function ProductComparison() {
           })
           .map((id) => id.trim())
           .filter(Boolean);
-
-        if (doc && ids.length) {
-          setSection(doc);
-          apiGet(`/api/products?ids=${ids.join(",")}`)
-            .then((list) => {
-              if (!activeReq) return;
-              const normalized = Array.isArray(list) ? list.filter((p) => p && p._id) : [];
-              if (normalized.length) {
-                setProducts(normalized);
-                return;
-              }
-              apiGet("/api/products")
-                .then((fallback) => {
-                  if (!activeReq) return;
-                  setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
-                })
-                .catch(() => {
-                  if (!activeReq) return;
-                  setProducts([]);
-                });
-            })
-            .catch(() => {
-              if (!activeReq) return;
-              apiGet("/api/products")
-                .then((fallback) => {
-                  if (!activeReq) return;
-                  setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
-                })
-                .catch(() => {
-                  if (!activeReq) return;
-                  setProducts([]);
-                });
-            });
-        } else {
-          setSection(doc || null);
-          apiGet("/api/products")
-            .then((fallback) => {
-              if (!activeReq) return;
-              setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
-            })
-            .catch(() => {
-              if (!activeReq) return;
-              setProducts([]);
-            });
-        }
-      })
-      .catch(() => {
+        const list = ids.length
+          ? await apiGet(`/api/products?ids=${ids.join(",")}`).catch(() => [])
+          : await apiGet("/api/products").catch(() => []);
         if (!activeReq) return;
-        setSection(null);
-        apiGet("/api/products")
-          .then((fallback) => {
-            if (!activeReq) return;
-            setProducts(Array.isArray(fallback) ? fallback.slice(0, 3) : []);
-          })
-          .catch(() => {
-            if (!activeReq) return;
-            setProducts([]);
-          });
-      });
+        const normalized = Array.isArray(list) ? list.filter((p) => p && p._id) : [];
+        setProducts(normalized.length ? normalized : []);
+      } catch {
+        if (!activeReq) return;
+        setProducts([]);
+      }
+    };
+    load();
     return () => { activeReq = false; };
   }, []);
 

@@ -730,8 +730,20 @@ export default function Shop() {
               </motion.div>
 
               {loading && (
-                <div className="sp-empty">
-                  <h4>Loading products...</h4>
+                <div className={view === "grid" ? "sp-grid" : "sp-list"}>
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div key={i} className="sp-card sp-card-skeleton">
+                      <div className="sp-card-img-wrap">
+                        <div className="sp-skeleton-img" />
+                      </div>
+                      <div className="sp-card-body">
+                        <div className="sp-skeleton-line" style={{ width: "45%", height: 10 }} />
+                        <div className="sp-skeleton-line" style={{ width: "80%", height: 14, marginTop: 6 }} />
+                        <div className="sp-skeleton-line" style={{ width: "60%", height: 10, marginTop: 6 }} />
+                        <div className="sp-skeleton-line" style={{ width: "35%", height: 16, marginTop: 10 }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 

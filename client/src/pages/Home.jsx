@@ -172,10 +172,21 @@ export default function Home() {
             </button>
 
             <div className="home-collection-modern-grid" ref={collectionGridRef}>
-              {collectionProducts.map((item) => {
-                const hoverImg = getHoverImage(item);
-                return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
-              })}
+              {collectionProducts.length > 0
+                ? collectionProducts.map((item) => {
+                    const hoverImg = getHoverImage(item);
+                    return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
+                  })
+                : Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="home-collection-modern-card sp-card-skeleton">
+                      <div className="home-collection-modern-image"><div className="sp-skeleton-img" style={{ height: "100%" }} /></div>
+                      <div className="home-collection-modern-info">
+                        <div className="sp-skeleton-line" style={{ width: "70%", height: 14 }} />
+                        <div className="sp-skeleton-line" style={{ width: "40%", height: 12, marginTop: 6 }} />
+                      </div>
+                    </div>
+                  ))
+              }
             </div>
 
             <button type="button" className="home-collection-modern-nav next" aria-label="Scroll right" onClick={() => scrollCollection(1)}>
@@ -205,10 +216,21 @@ export default function Home() {
             {popular?.text && <p className="home-collection-modern-sub">{popular.text}</p>}
           </div>
           <div className="cat-section-grid">
-            {popularProducts.map((item) => {
-              const hoverImg = getHoverImage(item);
-              return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
-            })}
+            {popularProducts.length > 0
+              ? popularProducts.map((item) => {
+                  const hoverImg = getHoverImage(item);
+                  return <CollectionCard key={item._id} item={item} hoverImg={hoverImg} />;
+                })
+              : Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="home-collection-modern-card sp-card-skeleton">
+                    <div className="home-collection-modern-image"><div className="sp-skeleton-img" style={{ height: "100%" }} /></div>
+                    <div className="home-collection-modern-info">
+                      <div className="sp-skeleton-line" style={{ width: "70%", height: 14 }} />
+                      <div className="sp-skeleton-line" style={{ width: "40%", height: 12, marginTop: 6 }} />
+                    </div>
+                  </div>
+                ))
+            }
           </div>
           <div className="text-center mt-4">
             <a href="/shop" className="btn-dark d-inline-flex align-items-center gap-2">
