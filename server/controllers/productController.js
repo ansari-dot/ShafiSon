@@ -42,8 +42,9 @@ function normalizeProductDoc(product) {
 
 export async function getProducts(req, res) {
   try {
-    const { search, ids, page, limit } = req.query;
+    const { search, ids, page, limit, category } = req.query;
     const searchText = String(search || "").trim();
+    const categoryFilter = String(category || "").trim();
 
     // ids mode — no pagination (used internally)
     if (ids) {
@@ -55,14 +56,16 @@ export async function getProducts(req, res) {
     }
 
     const escapedSearch = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const filter = searchText
-      ? {
-          $or: [
-            { $text: { $search: searchText } },
-            { sku: { $regex: `^${escapedSearch}`, $options: "i" } },
-          ],
-        }
-      : {};
+    // Try exact SKU match first (indexed, fast) — fall back to $text only if needed
+    let filter = {};
+    if (searchText) {
+      const skuMatch = await Product.exists({ sku: { $regex: `^${escapedSearch}`, $options: "i" } });
+      filter = skuMatch
+        ? { sku: { $regex: `^${escapedSearch}`, $options: "i" } }
+        : { $text: { $search: searchText } };
+    }
+
+    if (categoryFilter) filter = { ...filter, category: categoryFilter };
 
     const pageNum  = Math.max(1, parseInt(page)  || 1);
     const limitNum = Math.max(1, parseInt(limit) || 20);
@@ -76,26 +79,33 @@ export async function getProducts(req, res) {
 
     const [products, total] = await Promise.all([
       Product.find(filter, projection).sort(sort).skip(skip).limit(limitNum).lean(),
-      Product.countDocuments(filter),
+      pageNum === 1 ? Product.countDocuments(filter) : Promise.resolve(null),
     ]);
 
     return res.json({
       products: products.map(normalizeProductDoc),
       total,
       page: pageNum,
-      totalPages: Math.ceil(total / limitNum),
+      totalPages: total !== null ? Math.ceil(total / limitNum) : undefined,
     });
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch products" });
   }
 }
 
+// Projection for detail page — excludes nothing, but normalizes imgs before sending
+const DETAIL_PRODUCT_PROJECTION = { description: 1, specs: 1, imgs: 1,
+  sku: 1, title: 1, price: 1, priceUnit: 1, quantity: 1, isDeal: 1,
+  img: 1, category: 1, subcategory: 1, material: 1, rating: 1,
+  reviews: 1, badge: 1, sizes: 1, inStock: 1, colors: 1, createdAt: 1,
+};
+
 export async function getProductById(req, res) {
   const id = req.params.id;
   if (!isValidObjectId(id)) return res.status(400).json({ message: "Invalid id" });
 
   try {
-    const product = await Product.findById(id).lean();
+    const product = await Product.findById(id, DETAIL_PRODUCT_PROJECTION).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
     return res.json(normalizeProductDoc(product));
   } catch (err) {
@@ -107,8 +117,7 @@ export async function createProduct(req, res) {
   try {
     const body = { ...req.body };
     if (!body.sku || !String(body.sku).trim()) {
-      const count = await Product.countDocuments();
-      body.sku = `SKU-${String(count + 1).padStart(5, '0')}`;
+      body.sku = `SKU-${Date.now().toString(36).toUpperCase()}`;
     }
     const product = await Product.create(body);
     return res.status(201).json(normalizeProductDoc(product.toObject()));

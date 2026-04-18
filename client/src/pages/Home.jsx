@@ -79,8 +79,10 @@ function getHoverImage(item) {
 
 export default function Home() {
   usePageMeta({
-    title: "ShafiSons | Premium Curtains, Sofa Fabrics & Blinds",
-    description: "Explore premium curtain cloth, sofa fabrics, and office blinds from ShafiSons. Trusted craftsmanship since 1972.",
+    title: "Premium Curtains, Blinds & Interior Fabrics",
+    description: "Shop premium curtain fabrics, custom drapery, modern blinds, floor seating & upholstery at Shafisons. Trusted by 15,000+ customers since 1975.",
+    keywords: "curtain fabric, blinds, sofa fabric, upholstery, floor seating, interior fabrics Quetta",
+    canonical: "/",
   });
 
   const collectionGridRef = useRef(null);

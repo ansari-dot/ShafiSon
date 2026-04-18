@@ -100,6 +100,13 @@ const revealCard = {
 };
 
 export default function Contact() {
+  usePageMeta({
+    title: "Contact Us — Get in Touch",
+    description: "Contact Shafisons for curtain fabrics, blinds, sofa fabrics & custom interior solutions. Visit our Jinnah Road showroom in Quetta or call +92 81 123 4567.",
+    keywords: "contact Shafisons, curtain fabric shop Quetta, interior fabric store Pakistan, blinds showroom Quetta",
+    canonical: "/contact",
+  });
+
   const [form, setForm]   = useState({ firstName: "", lastName: "", email: "", phone: "", topic: "", message: "" });
   const [sent, setSent]   = useState(false);
   const [errors, setErrors] = useState({});

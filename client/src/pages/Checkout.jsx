@@ -3,8 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { formatPKR } from "../util/formatCurrency";
 import { getCart } from "../util/cart";
 import { apiPost } from "../util/api";
+import usePageMeta from "../util/usePageMeta";
 
 export default function Checkout() {
+  usePageMeta({
+    title: "Secure Checkout",
+    description: "Complete your order securely at Shafisons. Fast delivery on curtain fabrics, blinds & interior solutions across Pakistan.",
+    canonical: "/checkout",
+  });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [items, setItems] = useState([]);

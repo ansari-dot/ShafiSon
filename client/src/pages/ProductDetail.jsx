@@ -5,6 +5,7 @@ import { formatPKR } from "../util/formatCurrency";
 import { addToCart } from "../util/cart";
 import { hasInWishlist, toggleWishlist } from "../wishlist";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
+import usePageMeta from "../util/usePageMeta";
 
 /* -- Icons -- */
 const StarIcon = ({ filled }) => (
@@ -192,6 +193,17 @@ export default function ProductDetail() {
   const [deal, setDeal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  usePageMeta({
+    title: product ? product.title : "Product",
+    description: product
+      ? `Buy ${product.title} — ${product.category} by Shafisons. ${product.material ? `Made from ${product.material}.` : ""} Premium quality interior fabrics in Quetta, Pakistan.`
+      : "Premium interior fabric product at Shafisons.",
+    keywords: product ? `${product.title}, ${product.category}, ${product.material || ""}, interior fabric Quetta` : "",
+    canonical: `/shop/${id}`,
+    image: product?.img || undefined,
+    type: "product",
+  });
 
   const [activeImg, setActiveImg] = useState(0);
   const [selectedSize, setSize] = useState(null);

@@ -1,4 +1,5 @@
 const store = new Map();
+const MAX_CACHE_SIZE = 500;
 
 /**
  * Simple in-memory cache middleware.
@@ -20,6 +21,10 @@ export function cache(ttlSeconds = 30) {
 
     const originalJson = res.json.bind(res);
     res.json = (data) => {
+      if (store.size >= MAX_CACHE_SIZE) {
+        const firstKey = store.keys().next().value;
+        store.delete(firstKey);
+      }
       store.set(key, {
         body: JSON.stringify(data),
         expiresAt: Date.now() + ttlSeconds * 1000,

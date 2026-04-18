@@ -222,6 +222,29 @@ export default function Shop() {
     return (params.get("sort") || "").trim();
   }, [location.search]);
 
+  const shopTitle = queryText
+    ? `Search: ${queryText}`
+    : isDealPage
+    ? "Current Deals & Offers"
+    : queryCategory
+    ? `${queryCategory} Collection`
+    : "Shop All Products";
+
+  const shopDesc = queryText
+    ? `Search results for "${queryText}" — browse premium interior fabrics at Shafisons.`
+    : isDealPage
+    ? "Exclusive deals on premium curtain fabrics, blinds, sofa fabrics & more at Shafisons."
+    : queryCategory
+    ? `Shop ${queryCategory} — premium quality interior fabrics and solutions at Shafisons, Quetta.`
+    : "Browse our full collection of curtain fabrics, blinds, sofa fabrics, floor seating & upholstery at Shafisons.";
+
+  usePageMeta({
+    title: shopTitle,
+    description: shopDesc,
+    keywords: "curtain fabric shop, buy blinds Pakistan, sofa fabric online, upholstery fabric Quetta, interior fabrics",
+    canonical: "/shop",
+  });
+
   const [items, setItems] = useState([]);
   const [categoryDocs, setCategoryDocs] = useState([]);
   const [deal, setDeal] = useState(null);
@@ -264,28 +287,37 @@ export default function Shop() {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        let list = [];
-        const dealDoc = await apiGet("/api/deal-section").catch(() => null);
+
+        let productPath;
+        if (isDealPage) {
+          productPath = null; // resolved after deal fetch
+        } else if (queryText) {
+          productPath = `/api/products?search=${encodeURIComponent(queryText)}&limit=50`;
+        } else if (queryCategory) {
+          productPath = `/api/products?category=${encodeURIComponent(queryCategory)}&limit=50`;
+        } else {
+          productPath = "/api/products?limit=50";
+        }
+
+        const [dealDoc, initialData] = await Promise.all([
+          apiGet("/api/deal-section").catch(() => null),
+          productPath ? apiGet(productPath).catch(() => null) : Promise.resolve(null),
+        ]);
+
         if (!active) return;
         setDeal(dealDoc || null);
+
+        let list = [];
         if (isDealPage) {
           const ids = dealDoc?.productIds?.length ? dealDoc.productIds.join(",") : "";
-          if (!ids) {
+          if (ids) {
+            const data = await apiGet(`/api/products?ids=${ids}`);
             if (!active) return;
-            setItems([]);
-            setError("");
-            return;
+            list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
           }
-          const data = await apiGet(`/api/products?ids=${ids}`);
-          if (!active) return;
-          list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
         } else {
-          const path = queryText
-            ? `/api/products?search=${encodeURIComponent(queryText)}&limit=50`
-            : "/api/products?limit=50";
-          const data = await apiGet(path);
-          if (!active) return;
-          list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
+          list = Array.isArray(initialData) ? initialData
+            : Array.isArray(initialData?.products) ? initialData.products : [];
         }
 
         if (!active) return;
@@ -309,7 +341,7 @@ export default function Shop() {
 
     loadProducts();
     return () => { active = false; };
-  }, [isDealPage, queryText]);
+  }, [isDealPage, queryText, queryCategory]);
 
   useEffect(() => {
     apiGet("/api/categories").then((data) => {

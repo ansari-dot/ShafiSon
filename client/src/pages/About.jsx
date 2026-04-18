@@ -100,6 +100,13 @@ const revealCard = {
 };
 
 export default function About() {
+  usePageMeta({
+    title: "About Us — Crafting Interiors Since 1975",
+    description: "Learn about Shafisons — a trusted name in premium curtain fabrics, blinds, floor seating & upholstery in Quetta, Pakistan since 1975. 15,000+ happy customers.",
+    keywords: "about Shafisons, interior fabric company Quetta, curtain fabric history, premium blinds Pakistan",
+    canonical: "/about",
+  });
+
   const [teamSection, setTeamSection] = useState(null);
 
   useEffect(() => {

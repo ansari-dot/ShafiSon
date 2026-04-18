@@ -3,8 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { formatPKR } from "../util/formatCurrency";
 import { getCart, updateQty, removeFromCart, getCartSubtotal } from "../util/cart";
 import { apiGet } from "../util/api";
+import usePageMeta from "../util/usePageMeta";
 
 export default function Cart() {
+  usePageMeta({
+    title: "Your Cart",
+    description: "Review your selected curtain fabrics, blinds and interior products before checkout at Shafisons.",
+    canonical: "/cart",
+  });
   const [items, setItems] = useState([]);
   const [browseItems, setBrowseItems] = useState([]);
   const [couponCode, setCouponCode] = useState("");
