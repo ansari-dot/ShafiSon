@@ -134,20 +134,10 @@ export default function Home() {
   return (
     <main className="home-page">
       <Hero
-        title={
-          <>
-            {heroDoc?.titleLine1 || "Timeless Interiors, Crafted by"}{" "}
-            <span className="d-block">{heroDoc?.titleLine2 || "shafisons"}</span>
-          </>
-        }
-        text={heroDoc?.text || "Premium Curtain Cloth, Sofa Fabrics & Office Blinds - trusted since 1972."}
-        label={heroDoc?.label || "New Arrival Campaign"}
-        highlights={heroDoc?.highlights || "50+ years of trusted interior fabric expertise"}
-        primaryBtnText={heroDoc?.primaryBtnText || "Shop Now"}
+        title={heroDoc?.titleLine1 || "Carpets & Floorings"}
+        label={heroDoc?.label || "ShafiSons"}
+        primaryBtnText={heroDoc?.primaryBtnText || "Explore"}
         primaryBtnLink={heroDoc?.primaryBtnLink || "/shop"}
-        secondaryBtnText={heroDoc?.secondaryBtnText || "Book Consultation"}
-        secondaryBtnLink={heroDoc?.secondaryBtnLink || "/contact"}
-        offerChip={heroDoc?.offerChip || "Free swatches + same day consultation"}
         slides={heroDoc?.heroImages}
         showButtons
       />

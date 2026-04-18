@@ -4,7 +4,7 @@ const heroBannerSchema = new mongoose.Schema(
   {
     label: { type: String, default: "New Arrival Campaign" },
     titleLine1: { type: String, default: "Timeless Interiors, Crafted by" },
-    titleLine2: { type: String, default: "shafisons" },
+    titleLine2: { type: String, default: "ShafiSons" },
     text: { type: String, default: "Premium Curtain Cloth, Sofa Fabrics & Office Blinds - trusted since 1972." },
     highlights: { type: String, default: "50+ years of trusted interior fabric expertise" },
     primaryBtnText: { type: String, default: "Shop Now" },

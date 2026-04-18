@@ -403,7 +403,7 @@ export default function ProductDetail() {
                   <span className={badgeClass(product.badge)}>{product.badge}</span>
                 )}
                 {displayImages[activeImg] && (
-                  <ImageZoom src={displayImages[activeImg]} alt={product.title} />
+                  <ImageZoom key={displayImages[activeImg]} src={displayImages[activeImg]} alt={product.title} />
                 )}
                 <button
                   className={`pd-wish-float ${wished ? "active" : ""}`}
