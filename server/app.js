@@ -34,7 +34,10 @@ app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 const allowedOrigins = [
         process.env.CORS_ORIGINS, // e.g. "http://a.com,http://b.com"
         process.env.CLIENT_URL, // e.g. "http://localhost:5173"
-        process.env.ADMIN_URL, // e.g. "http://localhost:3000"
+        process.env.SUB_CLIENT_URL, // e.g. "http://localhost:5173"
+        process.env.ADMIN_URL,
+
+        // e.g. "http://localhost:3000"
         "http://localhost:3000",
         "http://localhost:5173"
     ]
