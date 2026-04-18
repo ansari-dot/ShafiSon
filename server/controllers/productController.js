@@ -3,6 +3,7 @@ import Product from "../models/Product.js";
 const LIST_PRODUCT_PROJECTION = {
   description: 0,
   specs: 0,
+  imgs: 0,
 };
 
 function isValidObjectId(id) {

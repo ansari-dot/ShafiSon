@@ -281,8 +281,8 @@ export default function Shop() {
           list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
         } else {
           const path = queryText
-            ? `/api/products?search=${encodeURIComponent(queryText)}&limit=200`
-            : "/api/products?limit=200";
+            ? `/api/products?search=${encodeURIComponent(queryText)}&limit=50`
+            : "/api/products?limit=50";
           const data = await apiGet(path);
           if (!active) return;
           list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];

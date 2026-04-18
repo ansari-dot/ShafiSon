@@ -1,5 +1,5 @@
 const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
-const GET_CACHE_TTL_MS = 300000;
+const GET_CACHE_TTL_MS = 600000; // 10 min
 const responseCache = new Map();
 const inflightRequests = new Map();
 
@@ -19,9 +19,13 @@ export function resolveAssetUrl(path) {
   return `${API_BASE}${value.startsWith("/") ? value : `/${value}`}`;
 }
 
-function clearGetCache() {
-  responseCache.clear();
-  inflightRequests.clear();
+function clearCacheByPrefix(prefix) {
+  for (const key of responseCache.keys()) {
+    if (key.includes(prefix)) {
+      responseCache.delete(key);
+      inflightRequests.delete(key);
+    }
+  }
 }
 
 export async function apiGet(path) {
@@ -43,12 +47,8 @@ export async function apiGet(path) {
         const text = await res.text();
         throw new Error(text || `Request failed: ${res.status}`);
       }
-
       const data = await res.json();
-      responseCache.set(url, {
-        data,
-        expiresAt: Date.now() + GET_CACHE_TTL_MS,
-      });
+      responseCache.set(url, { data, expiresAt: Date.now() + GET_CACHE_TTL_MS });
       return data;
     })
     .finally(() => {
@@ -69,7 +69,7 @@ export async function apiPost(path, body) {
     const text = await res.text();
     throw new Error(text || `Request failed: ${res.status}`);
   }
-  clearGetCache();
+  clearCacheByPrefix(path.split("?")[0]);
   return res.json();
 }
 
@@ -83,7 +83,7 @@ export async function apiPut(path, body) {
     const text = await res.text();
     throw new Error(text || `Request failed: ${res.status}`);
   }
-  clearGetCache();
+  clearCacheByPrefix(path.split("?")[0]);
   return res.json();
 }
 
@@ -93,6 +93,6 @@ export async function apiDelete(path) {
     const text = await res.text();
     throw new Error(text || `Request failed: ${res.status}`);
   }
-  clearGetCache();
+  clearCacheByPrefix(path.split("?")[0]);
   return res.json();
 }
