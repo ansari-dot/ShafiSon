@@ -2,8 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { resolveAssetUrl } from "../util/api";
 import hero from "../assets/hero.webp";
+import hero1 from "../assets/hero1.webp";
+import hero2 from "../assets/hero2.webp";
+import hero3 from "../assets/hero3.webp";
+import hero4 from "../assets/hero4.webp";
 
-const fallbackSlides = [hero];
+const fallbackSlides = [hero, hero1, hero2, hero3, hero4];
 
 export default function Hero({
   slides,
@@ -24,9 +28,9 @@ export default function Hero({
   );
 
   const [current, setCurrent] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
   const slideContent = {
     0: {
-      primaryBtnText: "Explore More",
       centered: true,
       lowerButton: true,
       brandButton: true,
@@ -72,17 +76,37 @@ export default function Hero({
     return () => clearInterval(timer);
   }, [resolvedSlides.length]);
 
+  // Preload all images
+  useEffect(() => {
+    resolvedSlides.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [resolvedSlides]);
+
   return (
-    <section className="hero-with-banner">
-      <img
-        key={current}
-        src={resolvedSlides[current]}
-        alt={`ShafiSons hero banner ${current + 1}`}
-        className="hero-slide hero-slide-active"
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-      />
+    <section className="hero-with-banner" style={{ height: '120vh' }}>
+      {resolvedSlides.map((slide, index) => (
+        <img
+          key={index}
+          src={slide}
+          alt={`ShafiSons hero banner ${index + 1}`}
+          className={`hero-slide ${index === current ? "hero-slide-active" : ""}`}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: index === current ? 1 : 0,
+            transition: 'opacity 0.5s ease-in-out'
+          }}
+        />
+      ))}
       <div className="hero-overlay"></div>
       <div className={`hero-content-wrap ${activeContent?.centered ? "hero-content-wrap-centered" : ""}`}>
         <div className="container">
