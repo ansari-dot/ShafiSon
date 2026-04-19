@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet } from "../util/api";
 
-export default function Categories() {
-  const [items, setItems] = useState([]);
+export default function Categories({ initialItems }) {
+  const [items, setItems] = useState(() => (Array.isArray(initialItems) ? initialItems : []));
 
   useEffect(() => {
+    if (Array.isArray(initialItems) && initialItems.length) return undefined;
     let active = true;
     apiGet("/api/categories")
       .then((list) => {
@@ -19,7 +20,7 @@ export default function Categories() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialItems]);
 
   if (!items.length) return null;
   const movingItems = [...items, ...items];

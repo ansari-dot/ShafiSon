@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import ShopHero from "../components/ShopHero";
@@ -116,7 +116,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
     ? item.imgs.map(resolveAssetUrl).find((src) => src && src !== mainImg) || null
     : null;
   const [hovered, setHovered] = useState(false);
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     if (outOfStock) return;
     const unitPrice = dealActive ? dealPrice : item.price;
     addToCart({
@@ -128,7 +128,7 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
       priceUnit: item.priceUnit || 'per yard',
       isDeal: !!item.isDeal,
     }, 1);
-  };
+  }, [outOfStock, dealActive, dealPrice, item]);
   return (
     <motion.div
       className={`sp-card ${isList ? "sp-card-list" : ""}`}
@@ -145,6 +145,8 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
             src={hovered && hoverImg ? hoverImg : mainImg}
             alt={item.title}
             className="sp-card-img"
+            loading="lazy"
+            decoding="async"
             style={{ transition: "opacity 0.25s ease" }}
           />
         </Link>
@@ -292,11 +294,11 @@ export default function Shop() {
         if (isDealPage) {
           productPath = null; // resolved after deal fetch
         } else if (queryText) {
-          productPath = `/api/products?search=${encodeURIComponent(queryText)}&limit=50`;
+          productPath = `/api/products?search=${encodeURIComponent(queryText)}&limit=24`;
         } else if (queryCategory) {
-          productPath = `/api/products?category=${encodeURIComponent(queryCategory)}&limit=50`;
+          productPath = `/api/products?category=${encodeURIComponent(queryCategory)}&limit=24`;
         } else {
-          productPath = "/api/products?limit=50";
+          productPath = "/api/products?limit=24";
         }
 
         const [dealDoc, initialData] = await Promise.all([
@@ -433,7 +435,7 @@ export default function Shop() {
     return () => window.removeEventListener("wishlist:updated", updateWished);
   }, []);
 
-  const toggleWish = (item) => {
+  const toggleWish = useCallback((item) => {
     toggleWishlist({
       id: item._id,
       title: item.title,
@@ -442,7 +444,7 @@ export default function Shop() {
       category: item.category,
     });
     setWished(getWishlist().map((entry) => entry.id));
-  };
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...items];

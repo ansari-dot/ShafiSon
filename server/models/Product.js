@@ -41,6 +41,9 @@ productSchema.index({ isDeal: 1, createdAt: -1 });
 productSchema.index({ material: 1, createdAt: -1 });
 productSchema.index({ badge: 1, createdAt: -1 });
 productSchema.index({ quantity: 1 });
+productSchema.index({ price: 1 }); // Add price index for sorting
+productSchema.index({ rating: -1 }); // Add rating index for sorting
+productSchema.index({ inStock: 1 }); // Add stock index for filtering
 productSchema.index({ title: "text", sku: "text", category: "text" });
 
 export default mongoose.model("Product", productSchema);

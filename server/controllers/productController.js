@@ -3,7 +3,9 @@ import Product from "../models/Product.js";
 const LIST_PRODUCT_PROJECTION = {
   description: 0,
   specs: 0,
-  imgs: 0,
+  imgs: 0, // Exclude heavy image arrays for list view
+  createdAt: 0,
+  updatedAt: 0,
 };
 
 function isValidObjectId(id) {
@@ -68,7 +70,7 @@ export async function getProducts(req, res) {
     if (categoryFilter) filter = { ...filter, category: categoryFilter };
 
     const pageNum  = Math.max(1, parseInt(page)  || 1);
-    const limitNum = Math.max(1, parseInt(limit) || 20);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 24)); // Cap at 50, default 24
     const skip     = (pageNum - 1) * limitNum;
     const sort = searchText
       ? { score: { $meta: "textScore" }, createdAt: -1 }
@@ -90,6 +92,32 @@ export async function getProducts(req, res) {
     });
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch products" });
+  }
+}
+
+export async function getProductNavigation(req, res) {
+  try {
+    const [categoryBuckets, materialBuckets] = await Promise.all([
+      Product.aggregate([
+        { $match: { category: { $type: "string", $ne: "" } } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1, _id: 1 } },
+        { $limit: 12 },
+      ]),
+      Product.aggregate([
+        { $match: { material: { $type: "string", $ne: "" } } },
+        { $group: { _id: "$material", count: { $sum: 1 } } },
+        { $sort: { count: -1, _id: 1 } },
+        { $limit: 12 },
+      ]),
+    ]);
+
+    return res.json({
+      categories: categoryBuckets.map((item) => ({ label: item._id, count: item.count })),
+      materials: materialBuckets.map((item) => ({ label: item._id, count: item.count })),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to fetch product navigation" });
   }
 }
 

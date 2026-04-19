@@ -75,10 +75,11 @@ function ProductCard({ item }) {
   );
 }
 
-export default function CategorySections() {
-  const [sections, setSections] = useState([]);
+export default function CategorySections({ initialSections }) {
+  const [sections, setSections] = useState(() => (Array.isArray(initialSections) ? initialSections : []));
 
   useEffect(() => {
+    if (Array.isArray(initialSections) && initialSections.length) return undefined;
     let active = true;
     apiGet("/api/category-sections")
       .then(async (list) => {
@@ -99,7 +100,7 @@ export default function CategorySections() {
       })
       .catch(() => { if (!active) return; setSections([]); });
     return () => { active = false; };
-  }, []);
+  }, [initialSections]);
 
   if (!sections.length) return null;
 

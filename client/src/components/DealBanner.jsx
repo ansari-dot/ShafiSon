@@ -22,14 +22,15 @@ function useCountdown(targetDate) {
   return time;
 }
 
-export default function DealBanner() {
-  const [deal, setDeal] = useState(null);
+export default function DealBanner({ initialDeal = null }) {
+  const [deal, setDeal] = useState(initialDeal);
   const hasDeadline = !!deal?.endsAt && !Number.isNaN(new Date(deal.endsAt).getTime());
   const deadline = hasDeadline ? new Date(deal.endsAt).getTime() : 0;
   const { days, hours, mins, secs } = useCountdown(deadline);
   const showCountdown = hasDeadline && days + hours + mins + secs > 0;
 
   useEffect(() => {
+    if (initialDeal) return undefined;
     let active = true;
     apiGet("/api/deal-section")
       .then((doc) => {
@@ -43,7 +44,7 @@ export default function DealBanner() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialDeal]);
 
   const discountNode = (() => {
     const type = deal?.discountType || "percent";

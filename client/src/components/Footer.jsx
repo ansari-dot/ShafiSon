@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { apiPost } from "../util/api";
-import logo from "../assets/index-logo.png";
+import logo from "../assets/logo.png";
 
 const FacebookIcon = () => (
   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">

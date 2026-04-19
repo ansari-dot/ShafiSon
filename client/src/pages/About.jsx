@@ -155,11 +155,11 @@ export default function About() {
             <div className="au-hero-right">
               <div className="au-hero-img-grid">
                 <div className="au-img-main">
-                  <img src={aboutCurtain} alt="Curtain fabrics" className="img-fluid rounded-4" />
+                  <img src={aboutCurtain} alt="Curtain fabrics" className="img-fluid rounded-4" loading="eager" fetchPriority="high" />
                 </div>
                 <div className="au-img-stack">
-                  <img src={aboutOffice} alt="Office blinds" className="img-fluid rounded-4" />
-                  <img src={aboutSofa} alt="Sofa fabrics" className="img-fluid rounded-4" />
+                  <img src={aboutOffice} alt="Office blinds" className="img-fluid rounded-4" loading="lazy" />
+                  <img src={aboutSofa} alt="Sofa fabrics" className="img-fluid rounded-4" loading="lazy" />
                 </div>
               </div>
               <div className="au-float-card">
@@ -191,7 +191,7 @@ export default function About() {
           <div className="row g-5 align-items-center">
             <div className="col-lg-6">
               <div className="au-story-img-wrap">
-                <img src={aboutSofa} alt="Our story" className="img-fluid rounded-4 au-story-img" />
+                <img src={aboutSofa} alt="Our story" className="img-fluid rounded-4 au-story-img" loading="lazy" />
                 <div className="au-story-badge">
                   <span className="au-story-badge-year">45+</span>
                   <span className="au-story-badge-text">Years of<br />Excellence</span>

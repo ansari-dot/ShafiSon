@@ -87,38 +87,36 @@ export default function Home() {
 
   const collectionGridRef = useRef(null);
   const [heroDoc, setHeroDoc] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [collection, setCollection] = useState(null);
   const [collectionProducts, setCollectionProducts] = useState([]);
   const [popular, setPopular] = useState(null);
   const [popularProducts, setPopularProducts] = useState([]);
+  const [dealDoc, setDealDoc] = useState(null);
+  const [compareDoc, setCompareDoc] = useState(null);
+  const [compareProducts, setCompareProducts] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [categorySections, setCategorySections] = useState([]);
 
   useEffect(() => {
     let active = true;
 
-    Promise.all([
-      apiGet("/api/hero-banner").catch(() => null),
-      apiGet("/api/home-collection").catch(() => null),
-      apiGet("/api/popular-picks").catch(() => null),
-    ]).then(async ([heroData, collectionDoc, popularDoc]) => {
+    apiGet("/api/home").then((data) => {
       if (!active) return;
-
-      setHeroDoc(heroData || null);
-
-      const collectionIds = collectionDoc?.productIds?.length ? collectionDoc.productIds : [];
-      const popularIds = popularDoc?.productIds?.length ? popularDoc.productIds : [];
-
-      // Fetch both product lists in parallel
-      const [collectionList, popularList] = await Promise.all([
-        collectionIds.length ? apiGet(`/api/products?ids=${collectionIds.join(",")}`).catch(() => []) : Promise.resolve([]),
-        popularIds.length ? apiGet(`/api/products?ids=${popularIds.join(",")}`).catch(() => []) : Promise.resolve([]),
-      ]);
-
+      setHeroDoc(data?.hero || null);
+      setCategories(Array.isArray(data?.categories) ? data.categories : []);
+      setCollection(data?.collection || null);
+      setCollectionProducts(Array.isArray(data?.collectionProducts) ? data.collectionProducts : []);
+      setPopular(data?.popular || null);
+      setPopularProducts(Array.isArray(data?.popularProducts) ? data.popularProducts : []);
+      setDealDoc(data?.deal || null);
+      setCompareDoc(data?.compare || null);
+      setCompareProducts(Array.isArray(data?.compareProducts) ? data.compareProducts : []);
+      setTestimonials(Array.isArray(data?.testimonials) ? data.testimonials : []);
+      setCategorySections(Array.isArray(data?.categorySections) ? data.categorySections : []);
+    }).catch(() => {
       if (!active) return;
-
-      setCollection(collectionIds.length ? collectionDoc : null);
-      setCollectionProducts(Array.isArray(collectionList) ? collectionList : []);
-      setPopular(popularIds.length ? popularDoc : null);
-      setPopularProducts(Array.isArray(popularList) ? popularList : []);
+      setHeroDoc(null);
     });
 
     return () => { active = false; };
@@ -142,7 +140,7 @@ export default function Home() {
         showButtons
       />
 
-      <Categories />
+      <Categories initialItems={categories} />
 
       <section style={{ padding: "1rem 0 4rem" }} className="home-collection-modern">
         <div className="container">
@@ -196,9 +194,9 @@ export default function Home() {
         </div>
       </section>
 
-      <CategorySections />
+      <CategorySections initialSections={categorySections} />
 
-      <DealBanner />
+      <DealBanner initialDeal={dealDoc} />
 
       <section className="section-pad home-collection-modern">
         <div className="container">
@@ -232,11 +230,11 @@ export default function Home() {
         </div>
       </section>
 
-      <ProductComparison />
+      <ProductComparison initialSection={compareDoc} initialProducts={compareProducts} />
 
       <HowItWorks />
 
-      <TestimonialSlider />
+      <TestimonialSlider initialItems={testimonials} />
 
       <FAQ />
 

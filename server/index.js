@@ -11,6 +11,8 @@ app.listen(PORT, () => {
 async function warmupCache() {
   const base = `http://localhost:${PORT}`;
   const routes = [
+    "/api/home",
+    "/api/products/navigation",
     "/api/products?limit=50",
     "/api/categories",
     "/api/hero-banner",

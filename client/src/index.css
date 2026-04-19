@@ -9855,6 +9855,170 @@ body.sp-drawer-open {
     background: rgba(255, 255, 255, 0.18);
     border-color: rgba(255, 255, 255, 0.55);
 }
+
+@media (max-width: 768px) {
+    .hero-content-panel {
+        max-width: 100%;
+        padding: 3.2rem 0 0.5rem;
+    }
+    .hero-content-panel-centered {
+        max-width: 340px;
+        margin: 0 auto;
+        padding: 3rem 16px 0.5rem;
+        text-align: left;
+    }
+    .hero-eyebrow {
+        margin-bottom: 0.45rem;
+        font-size: 0.58rem;
+        letter-spacing: 0.1em;
+    }
+    .hero-title {
+        font-size: clamp(1.12rem, 4.8vw, 1.7rem);
+        font-weight: 560;
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+        white-space: normal;
+    }
+    .hero-cta-row {
+        gap: 6px;
+        margin-top: 0.7rem;
+    }
+    .hero-cta-row-lower {
+        margin-top: 1.8rem;
+    }
+    .hero-cta-primary,
+    .hero-cta-secondary {
+        min-width: 110px;
+        min-height: 32px;
+        padding: 0.42rem 0.68rem;
+        font-size: 0.56rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+    .hero-content-panel-centered .hero-eyebrow {
+        display: block;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-size: 0.82rem;
+        letter-spacing: 0.18em;
+    }
+    .hero-content-panel-centered .hero-title {
+        max-width: 6ch;
+        font-size: 2.45rem;
+        font-weight: 700;
+        line-height: 0.98;
+        text-align: left;
+    }
+    .hero-content-panel-centered .hero-cta-row {
+        justify-content: center;
+        margin-top: 1.55rem;
+    }
+    .hero-content-panel-centered .hero-cta-primary,
+    .hero-content-panel-centered .hero-cta-secondary {
+        width: min(100%, 220px);
+        min-width: 0;
+        min-height: 42px;
+        padding: 0.68rem 0.95rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+}
+
+@media (max-width: 520px) {
+    .hero-content-panel {
+        padding: 2.75rem 0 0.35rem;
+    }
+    .hero-content-panel-centered {
+        max-width: 320px;
+        padding: 2.85rem 14px 0.35rem;
+    }
+    .hero-eyebrow {
+        font-size: 0.5rem;
+        letter-spacing: 0.08em;
+    }
+    .hero-title {
+        font-size: clamp(0.94rem, 5.6vw, 1.28rem);
+        font-weight: 540;
+        line-height: 1.14;
+    }
+    .hero-cta-row {
+        gap: 5px;
+        margin-top: 0.55rem;
+    }
+    .hero-cta-row-lower {
+        margin-top: 1.25rem;
+    }
+    .hero-cta-primary,
+    .hero-cta-secondary {
+        min-width: 96px;
+        min-height: 29px;
+        padding: 0.36rem 0.56rem;
+        font-size: 0.5rem;
+    }
+    .hero-content-panel-centered .hero-eyebrow {
+        margin-bottom: 0.9rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+    }
+    .hero-content-panel-centered .hero-title {
+        max-width: 6ch;
+        font-size: 2rem;
+        line-height: 0.98;
+    }
+    .hero-content-panel-centered .hero-cta-row {
+        margin-top: 1.3rem;
+    }
+    .hero-content-panel-centered .hero-cta-primary,
+    .hero-content-panel-centered .hero-cta-secondary {
+        width: min(100%, 190px);
+        min-height: 36px;
+        padding: 0.56rem 0.82rem;
+        font-size: 0.62rem;
+    }
+}
+
+@media (max-width: 390px) {
+    .hero-content-panel {
+        padding-top: 2.2rem;
+    }
+    .hero-title {
+        font-size: clamp(0.86rem, 5.2vw, 1.1rem);
+        font-weight: 520;
+    }
+    .hero-cta-row-lower {
+        margin-top: 0.95rem;
+    }
+    .hero-cta-primary,
+    .hero-cta-secondary {
+        min-width: 88px;
+        min-height: 27px;
+        padding: 0.32rem 0.5rem;
+        font-size: 0.46rem;
+    }
+    .hero-content-panel-centered {
+        max-width: 290px;
+        padding-top: 2.6rem;
+    }
+    .hero-content-panel-centered .hero-eyebrow {
+        font-size: 0.66rem;
+        margin-bottom: 0.8rem;
+    }
+    .hero-content-panel-centered .hero-title {
+        font-size: 1.72rem;
+    }
+    .hero-content-panel-centered .hero-cta-row {
+        margin-top: 1.1rem;
+    }
+    .hero-content-panel-centered .hero-cta-primary,
+    .hero-content-panel-centered .hero-cta-secondary {
+        width: min(100%, 172px);
+        min-height: 32px;
+        padding: 0.45rem 0.7rem;
+        font-size: 0.56rem;
+    }
+}
 .hero-dots {
     position: absolute;
     bottom: 20px;
@@ -9952,12 +10116,14 @@ body.sp-drawer-open {
     padding: 1.4rem 0 4.25rem;
   }
   .hero-eyebrow {
-    font-size: 0.78rem;
-    letter-spacing: 0.22em;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
   }
   .hero-title {
     max-width: 11ch;
-    font-size: clamp(2rem, 9vw, 3.25rem);
+    font-size: clamp(1.12rem, 4.8vw, 1.7rem);
+    font-weight: 560;
+    line-height: 1.12;
   }
   .hero-copy,
   .hero-highlight {
@@ -9971,15 +10137,18 @@ body.sp-drawer-open {
     font-size: 0.85rem;
   }
   .hero-cta-row {
-    gap: 10px;
-    margin-top: 1.25rem;
+    gap: 6px;
+    margin-top: 0.7rem;
   }
   .hero-cta-primary,
   .hero-cta-secondary {
-    min-width: 0;
-    width: 100%;
-    min-height: 48px;
-    font-size: 0.83rem;
+    width: auto;
+    min-width: 110px;
+    min-height: 32px;
+    padding: 0.42rem 0.68rem;
+    font-size: 0.56rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
   }
 }
 
@@ -9995,6 +10164,19 @@ body.sp-drawer-open {
   }
   .hero-title {
     max-width: 8ch;
-    font-size: clamp(1.9rem, 10vw, 2.5rem);
+    font-size: clamp(0.94rem, 5.6vw, 1.28rem);
+    font-weight: 540;
+    line-height: 1.14;
+  }
+  .hero-cta-row {
+    gap: 5px;
+    margin-top: 0.55rem;
+  }
+  .hero-cta-primary,
+  .hero-cta-secondary {
+    min-width: 96px;
+    min-height: 29px;
+    padding: 0.36rem 0.56rem;
+    font-size: 0.5rem;
   }
 }

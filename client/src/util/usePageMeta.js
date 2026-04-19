@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 const SITE_NAME = "Shafisons";
 const SITE_URL  = "https://shafisons.com";
-const DEFAULT_IMG = `${SITE_URL}/index-logo.png`;
+const DEFAULT_IMG = `${SITE_URL}/logo.png`;
 
 function setMeta(name, content, attr = "name") {
   if (!content) return;

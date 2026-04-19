@@ -19,6 +19,7 @@ import aboutTeamRoutes from "./routes/aboutTeamRoutes.js";
 import subscriberRoutes from "./routes/subscriberRoutes.js";
 import heroBannerRoutes from "./routes/heroBannerRoutes.js";
 import categorySectionRoutes from "./routes/categorySectionRoutes.js";
+import homeRoutes from "./routes/homeRoutes.js";
 
 import { connectDB } from "./config/db.js";
 import { cache, invalidateCache } from "./middlewares/cache.js";
@@ -29,8 +30,8 @@ dotenv.config();
 const app = express();
 app.use(compression());
 app.use(logger);
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: false, limit: "50mb" }));
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 const allowedOrigins = [
         process.env.CORS_ORIGINS, // e.g. "http://a.com,http://b.com"
         process.env.CLIENT_URL, // e.g. "http://localhost:5173"
@@ -78,7 +79,7 @@ app.use((req, res, next) => {
 await connectDB();
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-app.use("/api/products", cache(600), productRoutes);
+app.use("/api/products", cache(300), productRoutes); // Reduced from 600 to 300 seconds
 app.use("/api/categories", cache(600), categoryRoutes);
 app.use("/api/coupons", cache(600), couponRoutes);
 app.use("/api/testimonials", cache(600), testimonialRoutes);
@@ -96,6 +97,7 @@ app.use("/api/about-team", cache(300), aboutTeamRoutes);
 app.use("/api/subscribers", subscriberRoutes);
 app.use("/api/hero-banner", cache(600), heroBannerRoutes);
 app.use("/api/category-sections", cache(600), categorySectionRoutes);
+app.use("/api/home", cache(300), homeRoutes);
 
 export { invalidateCache };
 export default app;

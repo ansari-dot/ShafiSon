@@ -1,11 +1,12 @@
 ﻿import { useEffect, useState } from "react";
 import { apiGet } from "../util/api";
 
-export default function TestimonialSlider({ padded = true }) {
+export default function TestimonialSlider({ padded = true, initialItems }) {
   const [index, setIndex] = useState(0);
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => (Array.isArray(initialItems) ? initialItems : []));
 
   useEffect(() => {
+    if (Array.isArray(initialItems) && initialItems.length) return undefined;
     let active = true;
     apiGet("/api/testimonials?active=true")
       .then((data) => {
@@ -17,7 +18,7 @@ export default function TestimonialSlider({ padded = true }) {
         setItems([]);
       });
     return () => { active = false; };
-  }, []);
+  }, [initialItems]);
 
   const current = items[index];
 

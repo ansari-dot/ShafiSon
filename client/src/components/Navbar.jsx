@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
-import { navLinks, shopProducts as localShopProducts } from "../data/siteData";
+import { navLinks } from "../data/siteData";
 import { getCartCount } from "../util/cart";
 import { getWishlistCount } from "../wishlist";
 import { apiGet } from "../util/api";
@@ -56,7 +56,7 @@ export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
-  const [megaItems, setMegaItems] = useState([]);
+  const [megaNav, setMegaNav] = useState({ categories: [], materials: [] });
   const [megaCategoryDocs, setMegaCategoryDocs] = useState([]);
   const [openCategory, setOpenCategory] = useState(null);
 
@@ -67,21 +67,13 @@ export default function Navbar() {
   };
 
   const megaCategories = useMemo(() => {
-    const source = megaItems.length ? megaItems : localShopProducts;
-    const counts = source.reduce((acc, item) => {
-      const key = (item?.category || "").trim();
-      if (!key) return acc;
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
-
-    return Object.entries(counts)
-      .map(([label, count]) => {
+    return (megaNav.categories || [])
+      .map(({ label, count }) => {
         const doc = megaCategoryDocs.find(c => c.name === label);
         const subcategories = (
           doc?.subcategories?.length
             ? doc.subcategories.map(s => (typeof s === "object" ? s.name : s)).filter(Boolean)
-            : [...new Set(source.filter(p => (p?.category || '').trim() === label && p?.subcategory).map(p => p.subcategory))]
+            : []
         ).map(s => ({
           label: s,
           to: `/shop?category=${encodeURIComponent(label)}&subcategory=${encodeURIComponent(s)}`,
@@ -90,26 +82,18 @@ export default function Navbar() {
       })
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
       .slice(0, 5);
-  }, [megaItems, megaCategoryDocs]);
+  }, [megaNav.categories, megaCategoryDocs]);
 
   const megaMaterials = useMemo(() => {
-    const source = megaItems.length ? megaItems : localShopProducts;
-    const counts = source.reduce((acc, item) => {
-      const key = (item?.material || "").trim();
-      if (!key) return acc;
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
-
-    return Object.entries(counts)
-      .map(([label, count]) => ({
+    return (megaNav.materials || [])
+      .map(({ label, count }) => ({
         label,
         count,
         to: makeShopLink("material", label),
       }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
       .slice(0, 5);
-  }, [megaItems]);
+  }, [megaNav.materials]);
 
   const megaShortcuts = [
     { label: "Featured", to: "/shop" },
@@ -154,18 +138,20 @@ export default function Navbar() {
 
   useEffect(() => {
     let active = true;
-    const loadMegaItems = async () => {
+    const loadMegaNav = async () => {
       try {
-        const data = await apiGet("/api/products");
+        const data = await apiGet("/api/products/navigation");
         if (!active) return;
-        const list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : [];
-        setMegaItems(list);
+        setMegaNav({
+          categories: Array.isArray(data?.categories) ? data.categories : [],
+          materials: Array.isArray(data?.materials) ? data.materials : [],
+        });
       } catch {
         if (!active) return;
-        setMegaItems([]);
+        setMegaNav({ categories: [], materials: [] });
       }
     };
-    loadMegaItems();
+    loadMegaNav();
     return () => {
       active = false;
     };
@@ -275,7 +261,7 @@ export default function Navbar() {
                             <li>
                               <Link to="/shop" className="nb-mega-link" onClick={() => setMegaOpen(false)}>
                                 <span>All Products</span>
-                                <small>{(megaItems.length ? megaItems : localShopProducts).length}</small>
+                                <small>{megaNav.categories.reduce((sum, item) => sum + (item.count || 0), 0)}</small>
                               </Link>
                             </li>
                             {megaCategories.map((cat) => {

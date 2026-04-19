@@ -13,4 +13,6 @@ const categorySectionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+categorySectionSchema.index({ active: 1, position: 1 });
+
 export default mongoose.model("CategorySection", categorySectionSchema);
