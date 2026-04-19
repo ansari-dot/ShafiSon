@@ -9,6 +9,7 @@ import Customers from './pages/Customers';
 import Content from './pages/Content';
 import Promotions from './pages/Promotions';
 import Contacts from './pages/Contacts';
+import Consultations from './pages/Consultations';
 import Testimonials from './pages/Testimonials';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="promotions" element={<Promotions />} />
           <Route path="testimonials" element={<Testimonials />} />
           <Route path="contacts" element={<Contacts />} />
+          <Route path="consultations" element={<Consultations />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>

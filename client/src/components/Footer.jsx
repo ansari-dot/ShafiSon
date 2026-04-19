@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../util/api";
-import logo from "../assets/logo.png";
+import { apiPost, apiGet } from "../util/api";
+import indexLogo from "../assets/index-logo.png";
 
 const FacebookIcon = () => (
   <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -47,6 +47,31 @@ export default function Footer() {
   const [saving, setSaving] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiGet("/api/categories");
+        // Get first 6 categories for footer
+        setCategories(response.slice(0, 6));
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+        // Fallback to default categories if API fails
+        setCategories([
+          { name: "Curtain Fabrics", slug: "curtain-fabrics" },
+          { name: "Blinds & Shades", slug: "blinds-shades" },
+          { name: "Sofa Fabrics", slug: "sofa-fabrics" },
+          { name: "Floor Seating", slug: "floor-seating" },
+          { name: "Upholstery", slug: "upholstery" },
+          { name: "Home Decor", slug: "home-decor" }
+        ]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -74,7 +99,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="col-lg-4 col-md-6">
             <Link to="/" className="d-inline-block mb-3">
-              <img src={logo} alt="Shafisons" style={{ height: 110, width: "auto", maxWidth: 260, objectFit: "contain" }} />
+              <img src={indexLogo} alt="Shafisons" style={{ height: 110, width: "auto", maxWidth: 260, objectFit: "contain" }} />
             </Link>
             <p className="mb-4" style={{ fontSize: 13.5, lineHeight: 1.8, maxWidth: 320 }}>
               Premium curtain fabrics, custom drapery, modern blinds, floor seating &amp; upholstery
@@ -122,11 +147,13 @@ export default function Footer() {
             <h4 className="footer-head">Shop</h4>
             <ul className="list-unstyled footer-links">
               <li><Link to="/shop">All Products</Link></li>
-              <li><Link to="/shop?category=Curtain+Fabrics">Curtain Fabrics</Link></li>
-              <li><Link to="/shop?category=Blinds">Blinds &amp; Shades</Link></li>
-              <li><Link to="/shop?category=Sofa+Fabric">Sofa Fabrics</Link></li>
-              <li><Link to="/shop?category=Floor+Seating">Floor Seating</Link></li>
-              <li><Link to="/shop?category=Upholstery">Upholstery</Link></li>
+              {categories.map((category, index) => (
+                <li key={index}>
+                  <Link to={`/shop?category=${encodeURIComponent(category.name || category.slug)}`}>
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
               <li><Link to="/shop?deal=1">Current Deals</Link></li>
             </ul>
           </div>
@@ -150,9 +177,8 @@ export default function Footer() {
               <li><Link to="/track">Track My Order</Link></li>
               <li><Link to="/cart">My Cart</Link></li>
               <li><Link to="/wishlist">My Wishlist</Link></li>
-              <li><Link to="/contact">Returns &amp; Refunds</Link></li>
-              <li><Link to="/contact">Custom Orders</Link></li>
-              <li><Link to="/contact">Bulk &amp; Trade</Link></li>
+              <li><Link to="/return-refund">Returns &amp; Refunds</Link></li>
+              <li><Link to="/consultation">Book Consultation</Link></li>
             </ul>
           </div>
 
@@ -187,8 +213,9 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Shafisons. All rights reserved. Crafting interiors since 1975.
           </p>
           <div className="footer-pro-policy">
-            <a href="#" style={{ fontSize: 13, color: "var(--muted)" }}>Privacy Policy</a>
-            <a href="#" style={{ fontSize: 13, color: "var(--muted)" }}>Terms &amp; Conditions</a>
+            <Link to="/return-refund" style={{ fontSize: 13, color: "var(--muted)" }}>Return & Refund Policy</Link>
+            <Link to="/privacy-policy" style={{ fontSize: 13, color: "var(--muted)" }}>Privacy Policy</Link>
+            <Link to="/terms-conditions" style={{ fontSize: 13, color: "var(--muted)" }}>Terms &amp; Conditions</Link>
           </div>
         </div>
 

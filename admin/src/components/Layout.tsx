@@ -9,6 +9,7 @@ import {
   Tag, 
   Quote,
   MessageSquare, 
+  Calendar,
   BarChart2, 
   Settings, 
   Search, 
@@ -16,6 +17,7 @@ import {
   Box,
   AlertCircle,
   MessageCircle,
+  CalendarCheck,
   Mail
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -95,6 +97,7 @@ export default function Layout() {
           <NavItem to="/promotions" icon={Tag} label="Promotions" />
           <NavItem to="/testimonials" icon={Quote} label="Testimonials" />
           <NavItem to="/contacts" icon={MessageSquare} label="Contacts & Leads" />
+          <NavItem to="/consultations" icon={Calendar} label="Consultations" />
 
           <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mt-6 mb-2 ml-3">System</div>
           <NavItem to="/reports" icon={BarChart2} label="Reports" />
@@ -162,13 +165,17 @@ export default function Layout() {
                         <div
                           className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                            item.type === "alert" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            item.type === "alert" ? "bg-red-50 text-red-600" : 
+                            item.type === "consultation" ? "bg-green-50 text-green-600" :
+                            "bg-blue-50 text-blue-600"
                           )}
                         >
                           {item.type === "alert" ? (
                             <AlertCircle size={16} />
                           ) : item.type === "contact" ? (
                             <MessageCircle size={16} />
+                          ) : item.type === "consultation" ? (
+                            <CalendarCheck size={16} />
                           ) : item.type === "subscriber" ? (
                             <Mail size={16} />
                           ) : (

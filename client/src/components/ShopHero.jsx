@@ -27,7 +27,7 @@ export default function ShopHero() {
 
             <div className="shop-hero-cta-row">
               <a href="/contact" className="shop-hero-link">Order via WhatsApp</a>
-              <a href="/services" className="shop-hero-link">Book Interior Consultation</a>
+              <a href="/consultation" className="shop-hero-link">Book Interior Consultation</a>
             </div>
           </div>
 

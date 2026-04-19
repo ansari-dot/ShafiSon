@@ -1,6 +1,7 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import ContactLead from "../models/ContactLead.js";
+import Consultation from "../models/Consultation.js";
 import Subscriber from "../models/Subscriber.js";
 
 function daysAgo(n) {
@@ -36,6 +37,7 @@ export async function getDashboard(req, res) {
       salesData,
       recentOrders,
       recentContacts,
+      recentConsultations,
       recentSubscribers,
     ] = await Promise.all([
       Order.countDocuments(),
@@ -77,6 +79,8 @@ export async function getDashboard(req, res) {
         .sort({ createdAt: -1 }).limit(6).lean(),
       ContactLead.find({}, { firstName: 1, lastName: 1, createdAt: 1 })
         .sort({ createdAt: -1 }).limit(3).lean(),
+      Consultation.find({}, { name: 1, consultationType: 1, status: 1, createdAt: 1 })
+        .sort({ createdAt: -1 }).limit(3).lean(),
       Subscriber.find({}, { name: 1, email: 1, createdAt: 1 })
         .sort({ createdAt: -1 }).limit(3).lean(),
     ]);
@@ -114,6 +118,22 @@ export async function getDashboard(req, res) {
         text: `New contact message from ${c.firstName || "Customer"} ${c.lastName || ""}`.trim(),
         time: formatRelative(c.createdAt),
         _ts: new Date(c.createdAt).getTime(),
+      });
+    });
+    recentConsultations.forEach((consultation) => {
+      const consultationTypes = {
+        curtains: 'Curtain Design',
+        blinds: 'Blinds & Shades', 
+        upholstery: 'Upholstery Services',
+        interior: 'Complete Interior Design',
+        commercial: 'Commercial Projects'
+      };
+      const serviceType = consultationTypes[consultation.consultationType] || consultation.consultationType;
+      activityEvents.push({
+        type: "consultation",
+        text: `New consultation request from ${consultation.name || "Customer"} for ${serviceType}`,
+        time: formatRelative(consultation.createdAt),
+        _ts: new Date(consultation.createdAt).getTime(),
       });
     });
     recentSubscribers.forEach((s) => {
