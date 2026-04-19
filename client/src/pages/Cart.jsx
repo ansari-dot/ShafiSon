@@ -209,9 +209,14 @@ export default function Cart() {
                             <span className="cart-line-old-price">{formatPKR(row.originalPrice)}</span>
                           )}
                         </div>
+                        
+                        <div className="cart-line-quantity-info">
+                          <small className="text-muted">Quantity: {row.qty} {row.priceUnit === 'per yard' ? 'yards' : 'items'}</small>
+                        </div>
 
                         <div className="cart-line-controls">
                           <div className="cart-qty">
+                            <label className="cart-qty-label">{row.priceUnit === 'per yard' ? 'Yards:' : 'Quantity:'}</label>
                             <button
                               className="cart-qty-btn"
                               onClick={() => updateQty(row.id, Math.max(1, (row.qty || 1) - 1), row.size, row.color)}
@@ -229,7 +234,10 @@ export default function Cart() {
                             </button>
                           </div>
 
-                          <strong className="cart-line-total">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</strong>
+                          <div className="cart-line-total-wrap">
+                            <small className="text-muted">Total for this item:</small>
+                            <strong className="cart-line-total">{formatPKR((row.qty || 0) * (row.unitPrice || 0))}</strong>
+                          </div>
 
                           <button className="cart-remove-btn" onClick={() => removeFromCart(row.id, row.size, row.color)}>
                             Remove

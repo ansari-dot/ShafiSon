@@ -10,8 +10,6 @@ const emptyForm = {
   material: "",
   img: "",
   imgs: "",
-  rating: "",
-  reviews: "",
   badge: "",
   colors: "",
   sizes: "",
@@ -64,8 +62,6 @@ export default function AdminProducts() {
       material: form.material.trim(),
       img: form.img.trim(),
       imgs: form.imgs ? form.imgs.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      rating: form.rating ? Number(form.rating) : 0,
-      reviews: form.reviews ? Number(form.reviews) : 0,
       badge: form.badge ? form.badge.trim() : null,
       colors: form.colors ? form.colors.split(",").map((s) => s.trim()).filter(Boolean) : [],
       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()).filter(Boolean) : [],
@@ -151,15 +147,6 @@ export default function AdminProducts() {
                 <label className="form-label">Sizes (comma separated)</label>
                 <input className="form-control" value={form.sizes} onChange={(e) => onChange("sizes", e.target.value)} />
               </div>
-              <div className="col-md-2">
-                <label className="form-label">Rating</label>
-                <input type="number" step="0.1" className="form-control" value={form.rating} onChange={(e) => onChange("rating", e.target.value)} />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Reviews</label>
-                <input type="number" className="form-control" value={form.reviews} onChange={(e) => onChange("reviews", e.target.value)} />
-              </div>
-
               <div className="col-12">
                 <label className="form-label">Description</label>
                 <textarea className="form-control" rows="3" value={form.description} onChange={(e) => onChange("description", e.target.value)} />
@@ -186,7 +173,7 @@ export default function AdminProducts() {
               <table className="table align-middle mb-0">
                 <thead className="border-bottom">
                   <tr className="text-sm text-dark">
-                    {["Title", "Category", "Price", "Stock", "Rating", "Reviews", "Created"].map((head) => (
+                    {["Title", "Category", "Price", "Stock", "Created"].map((head) => (
                       <th key={head} className="py-3 fw-semibold">{head}</th>
                     ))}
                   </tr>
@@ -202,8 +189,6 @@ export default function AdminProducts() {
                           {p.inStock ? "In Stock" : "Out"}
                         </span>
                       </td>
-                      <td className="py-3 text-muted">{p.rating ?? 0}</td>
-                      <td className="py-3 text-muted">{p.reviews ?? 0}</td>
                       <td className="py-3 text-muted">{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}</td>
                     </tr>
                   ))}

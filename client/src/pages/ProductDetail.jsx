@@ -6,6 +6,8 @@ import { addToCart } from "../util/cart";
 import { hasInWishlist, toggleWishlist } from "../wishlist";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
 import usePageMeta from "../util/usePageMeta";
+import ProductReviews from "../components/ProductReviews";
+import "../components/ProductReviews.css";
 
 /* -- Icons -- */
 const StarIcon = ({ filled }) => (
@@ -117,11 +119,12 @@ function ImageZoom({ src, alt }) {
 
 
 function Stars({ rating }) {
+  const displayRating = Math.round(rating || 0);
   return (
     <span className="pd-stars">
       {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ color: i <= Math.round(rating) ? "#d97706" : "#dce5e4" }}>
-          <StarIcon filled={i <= Math.round(rating)} />
+        <span key={i} style={{ color: i <= displayRating ? "#d97706" : "#dce5e4" }}>
+          <StarIcon filled={i <= displayRating} />
         </span>
       ))}
     </span>
@@ -212,6 +215,24 @@ export default function ProductDetail() {
   const [wished, setWished] = useState(false);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
+
+  const handleProductUpdate = (stats) => {
+    setReviewStats(stats);
+  };
+
+  // Fetch review stats on mount so rating row shows correct data immediately
+  useEffect(() => {
+    if (!id) return;
+    apiGet(`/api/reviews/product/${id}?page=1&limit=1`)
+      .then(data => {
+        setReviewStats({
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0
+        });
+      })
+      .catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     let active = true;
@@ -445,10 +466,10 @@ export default function ProductDetail() {
 
             {/* Rating */}
             <div className="pd-rating-row">
-              <Stars rating={product.rating || 0} />
-              <span className="pd-rating-num">{product.rating || 0}</span>
+              <Stars rating={reviewStats.averageRating} />
+              <span className="pd-rating-num">{reviewStats.averageRating.toFixed(1)}</span>
               <span className="pd-rating-sep">·</span>
-              <span className="pd-review-count">{product.reviews || 0} reviews</span>
+              <span className="pd-review-count">{reviewStats.totalReviews} reviews</span>
             </div>
 
             {/* Price */}
@@ -504,7 +525,7 @@ export default function ProductDetail() {
             )}
 
             {/* Size */}
-            {product.sizes && product.sizes.length > 0 && (
+            {product.sizes && product.sizes.filter(s => !/custom.?length/i.test(s)).length > 0 && (
               <div className="pd-option-group">
                 <label className="pd-option-label">
                   Size
@@ -513,15 +534,17 @@ export default function ProductDetail() {
                   )}
                 </label>
                 <div className="pd-sizes">
-                  {product.sizes.map((s, i) => (
-                    <button
-                      key={i}
-                      className={`pd-size-btn ${selectedSize === i ? "active" : ""}`}
-                      onClick={() => setSize(selectedSize === i ? null : i)}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {product.sizes.map((s, i) =>
+                    /custom.?length/i.test(s) ? null : (
+                      <button
+                        key={i}
+                        className={`pd-size-btn ${selectedSize === i ? "active" : ""}`}
+                        onClick={() => setSize(selectedSize === i ? null : i)}
+                      >
+                        {s}
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             )}
@@ -575,7 +598,7 @@ export default function ProductDetail() {
                 onClick={() => setActiveTab(tab)}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                {tab === "reviews" && <span className="pd-tab-count">{product.reviews || 0}</span>}
+                {tab === "reviews" && <span className="pd-tab-count">{reviewStats.totalReviews}</span>}
               </button>
             ))}
           </div>
@@ -610,43 +633,7 @@ export default function ProductDetail() {
             )}
 
             {activeTab === "reviews" && (
-              <div className="pd-reviews">
-                <div className="pd-reviews-summary">
-                  <div className="pd-reviews-score">
-                    <span className="pd-score-big">{product.rating || 0}</span>
-                    <Stars rating={product.rating || 0} />
-                    <span className="pd-score-sub">Based on {product.reviews || 0} reviews</span>
-                  </div>
-                  <div className="pd-rating-bars">
-                    {[5,4,3,2,1].map(star => (
-                      <div className="pd-rating-bar-row" key={star}>
-                        <span className="pd-bar-label">{star}?</span>
-                        <div className="pd-bar-track">
-                          <div className="pd-bar-fill" style={{ width: `${star === 5 ? 68 : star === 4 ? 20 : star === 3 ? 8 : 3}%` }} />
-                        </div>
-                        <span className="pd-bar-pct">{star === 5 ? "68" : star === 4 ? "20" : star === 3 ? "8" : "3"}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="pd-review-list">
-                  {[] .map((r, i) => (
-                    <div className="pd-review-card" key={i}>
-                      <div className="pd-review-header">
-                        <div className="pd-reviewer-avatar">{r.name[0]}</div>
-                        <div>
-                          <strong className="pd-reviewer-name">{r.name}</strong>
-                          <span className="pd-review-date">{r.date}</span>
-                        </div>
-                        <div className="pd-review-stars ms-auto">
-                          <Stars rating={r.rating} />
-                        </div>
-                      </div>
-                      <p className="pd-review-text">{r.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ProductReviews productId={product._id} onProductUpdate={handleProductUpdate} />
             )}
           </div>
         </div>

@@ -13851,3 +13851,51 @@ html {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
 }
+
+/* Cart quantity and pricing clarity improvements */
+.cart-line-quantity-info {
+    margin-bottom: 0.5rem;
+}
+
+.cart-qty-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-right: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.cart-line-total-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.cart-line-total-wrap small {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.cart-line-price-unit {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+@media (max-width: 620px) {
+    .cart-qty-label {
+        display: block;
+        margin-bottom: 4px;
+        margin-right: 0;
+    }
+    
+    .cart-line-total-wrap {
+        align-items: flex-start;
+    }
+}

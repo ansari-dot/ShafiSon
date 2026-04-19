@@ -125,7 +125,7 @@ export async function getProductNavigation(req, res) {
 const DETAIL_PRODUCT_PROJECTION = { description: 1, specs: 1, imgs: 1,
   sku: 1, title: 1, price: 1, priceUnit: 1, quantity: 1, isDeal: 1,
   img: 1, category: 1, subcategory: 1, material: 1, rating: 1,
-  reviews: 1, badge: 1, sizes: 1, inStock: 1, colors: 1, createdAt: 1,
+  reviews: 1, averageRating: 1, totalReviews: 1, badge: 1, sizes: 1, inStock: 1, colors: 1, createdAt: 1,
 };
 
 export async function getProductById(req, res) {
@@ -133,9 +133,19 @@ export async function getProductById(req, res) {
   if (!isValidObjectId(id)) return res.status(400).json({ message: "Invalid id" });
 
   try {
-    const product = await Product.findById(id, DETAIL_PRODUCT_PROJECTION).lean();
+    const product = await Product.findById(id).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.json(normalizeProductDoc(product));
+    
+    // Ensure rating fields exist with defaults
+    const productWithDefaults = {
+      ...product,
+      averageRating: product.averageRating ?? product.rating ?? 0,
+      totalReviews: product.totalReviews ?? product.reviews ?? 0,
+      rating: product.rating ?? 0,
+      reviews: product.reviews ?? 0
+    };
+    
+    return res.json(normalizeProductDoc(productWithDefaults));
   } catch (err) {
     return res.status(500).json({ message: "Failed to fetch product" });
   }

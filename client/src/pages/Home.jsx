@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SEO from "../components/SEO";
 import Hero from "../components/Hero";
 import TestimonialSlider from "../components/TestimonialSlider";
 import Categories from "../components/Categories";
@@ -12,7 +13,6 @@ import HomeInstagramSection from "../components/HomeInstagramSection";
 import HomeStoreLocation from "../components/HomeStoreLocation";
 import { apiGet, resolveAssetUrl } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
-import usePageMeta from "../util/usePageMeta";
 
 const CartIcon = () => (
   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -78,13 +78,6 @@ function getHoverImage(item) {
 }
 
 export default function Home() {
-  usePageMeta({
-    title: "Premium Curtains, Blinds & Interior Fabrics",
-    description: "Shop premium curtain fabrics, custom drapery, modern blinds, floor seating & upholstery at Shafisons. Trusted by 15,000+ customers since 1975.",
-    keywords: "curtain fabric, blinds, sofa fabric, upholstery, floor seating, interior fabrics Quetta",
-    canonical: "/",
-  });
-
   const collectionGridRef = useRef(null);
   const [heroDoc, setHeroDoc] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -130,7 +123,14 @@ export default function Home() {
   };
 
   return (
-    <main className="home-page">
+    <>
+      <SEO 
+        title="Shafisons.pk | Premium Curtains, Blinds & Interior Fabrics — Quetta"
+        description="Shop premium curtain fabrics, custom drapery, modern blinds, floor seating & upholstery at Shafisons.pk. Trusted by 15,000+ customers since 1975."
+        keywords="shafisons.pk, curtain fabric Quetta, blinds Pakistan, sofa fabric, upholstery, floor seating, interior fabrics Quetta, shafisons"
+        canonical="https://shafisons.pk/"
+      />
+      <main className="home-page">
       <Hero
         title={heroDoc?.titleLine1 || "Carpets & Floorings"}
         label={heroDoc?.label || "ShafiSons"}
@@ -244,5 +244,6 @@ export default function Home() {
 
       <Newsletter />
     </main>
+    </>
   );
 }

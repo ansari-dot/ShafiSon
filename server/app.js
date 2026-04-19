@@ -21,6 +21,7 @@ import subscriberRoutes from "./routes/subscriberRoutes.js";
 import heroBannerRoutes from "./routes/heroBannerRoutes.js";
 import categorySectionRoutes from "./routes/categorySectionRoutes.js";
 import homeRoutes from "./routes/homeRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 import { connectDB } from "./config/db.js";
 import { cache, invalidateCache } from "./middlewares/cache.js";
@@ -100,6 +101,7 @@ app.use("/api/subscribers", subscriberRoutes);
 app.use("/api/hero-banner", cache(600), heroBannerRoutes);
 app.use("/api/category-sections", cache(600), categorySectionRoutes);
 app.use("/api/home", cache(300), homeRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 export { invalidateCache };
 export default app;

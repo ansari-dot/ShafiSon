@@ -14,6 +14,8 @@ const productSchema = new mongoose.Schema({
     material: { type: String, required: true },
     rating: { type: Number, default: 0 },
     reviews: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
     badge: { type: String, default: null },
     sizes: { type: [String], default: [] },
     description: { type: String, default: "" },

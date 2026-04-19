@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shafisons.pk/sitemap.xml
+
+# Block admin pages from search engines
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /payment-confirmation
+Disallow: /thankyou
