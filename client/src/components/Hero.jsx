@@ -32,7 +32,7 @@ export default function Hero({
   const [loaded, setLoaded] = useState(() => new Set([0]));
 
   const slideContent = {
-    0: { centered: true, lowerButton: true, brandButton: true },
+    0: { centered: true, brandButton: false },
     1: { label: "Smart. Modern.", title: "Blinds", primaryBtnText, centered: false },
     2: { label: "Tradition. Comfort", title: "Floor Seating", primaryBtnText, centered: false },
     3: { label: "Texture. Possibility.", title: "Upholstery Fabrics", primaryBtnText, centered: true },
