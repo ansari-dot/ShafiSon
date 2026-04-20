@@ -1009,6 +1009,8 @@ svg {
     gap: 12px;
     min-width: 210px;
     flex: 0 0 auto;
+    text-decoration: none !important;
+    color: inherit !important;
 }
 
 .categories-orb-marquee {
@@ -8826,12 +8828,13 @@ body.sp-drawer-open {
 }
 
 .footer-links a {
-    color: #4b5563;
+    color: #4b5563 !important;
     font-size: 0.92rem;
+    text-decoration: none !important;
 }
 
 .footer-links a:hover {
-    color: var(--brand);
+    color: var(--brand) !important;
 }
 
 .footer-pro-bottom {
