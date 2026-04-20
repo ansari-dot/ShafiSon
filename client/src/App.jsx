@@ -13,6 +13,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
+const Compare = lazy(() => import("./pages/Compare"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Thankyou = lazy(() => import("./pages/Thankyou"));
 const AdminProducts = lazy(() => import("./pages/AdminProducts"));
@@ -37,6 +38,7 @@ function App() {
           <Route path="/shop/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/compare" element={<Compare />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-confirmation" element={<PaymentConfirmation />} />
           <Route path="/thankyou" element={<Thankyou />} />

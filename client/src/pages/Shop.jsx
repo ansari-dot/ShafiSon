@@ -6,6 +6,7 @@ import { formatPKR } from "../util/formatCurrency";
 import { apiGet, resolveAssetUrl } from "../util/api";
 import { addToCart } from "../util/cart";
 import { getWishlist, toggleWishlist } from "../wishlist";
+import { getCompare, toggleCompare } from "../compare";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
 import usePageMeta from "../util/usePageMeta";
 
@@ -47,6 +48,11 @@ const EyeIcon = () => (
   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const CompareIcon = () => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
   </svg>
 );
 const GridIcon = () => (
@@ -104,7 +110,7 @@ function FilterGroup({ title, children, defaultOpen = true }) {
 }
 
 /* -- Product Card -- */
-function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealActive }) {
+function ProductCard({ item, view, wished, compared, onWish, onCompare, deal, getDealPrice, isDealActive }) {
   const isList = view === "list";
   const dealActive = item?.isDeal && isDealActive(deal);
   const outOfStock = isOutOfStock(item);
@@ -157,6 +163,10 @@ function ProductCard({ item, view, wished, onWish, deal, getDealPrice, isDealAct
           <button className="sp-action-btn" onClick={() => onWish(item)} aria-label="Wishlist"
             style={{ color: wished ? "#ef4444" : undefined }}>
             <HeartIcon active={wished} />
+          </button>
+          <button className="sp-action-btn" onClick={() => onCompare(item)} aria-label="Compare"
+            style={{ color: compared ? "#3b82f6" : undefined }}>
+            <CompareIcon />
           </button>
           <button className="sp-action-btn" aria-label="Quick view"><EyeIcon /></button>
         </div>
@@ -271,6 +281,7 @@ export default function Shop() {
   const [sort,         setSort]         = useState("featured");
   const [view,         setView]         = useState("grid");
   const [wished,       setWished]       = useState(() => getWishlist().map((item) => item.id));
+  const [compared,     setCompared]     = useState(() => getCompare().map((item) => item.id));
   const [drawerOpen,   setDrawerOpen]   = useState(false);
 
   useEffect(() => {
@@ -431,8 +442,13 @@ export default function Shop() {
 
   useEffect(() => {
     const updateWished = () => setWished(getWishlist().map((item) => item.id));
+    const updateCompared = () => setCompared(getCompare().map((item) => item.id));
     window.addEventListener("wishlist:updated", updateWished);
-    return () => window.removeEventListener("wishlist:updated", updateWished);
+    window.addEventListener("compare:updated", updateCompared);
+    return () => {
+      window.removeEventListener("wishlist:updated", updateWished);
+      window.removeEventListener("compare:updated", updateCompared);
+    };
   }, []);
 
   const toggleWish = useCallback((item) => {
@@ -445,6 +461,24 @@ export default function Shop() {
     });
     setWished(getWishlist().map((entry) => entry.id));
   }, []);
+
+  const toggleComp = useCallback((item) => {
+    const success = toggleCompare({
+      id: item._id,
+      title: item.title,
+      img: item.img,
+      price: item.price,
+      priceUnit: item.priceUnit || 'per yard',
+      category: item.category,
+      material: item.material,
+      rating: item.rating,
+      reviews: item.reviews,
+    });
+    if (!success && !compared.includes(item._id)) {
+      alert("You can compare up to 4 products at a time.");
+    }
+    setCompared(getCompare().map((entry) => entry.id));
+  }, [compared]);
 
   const filtered = useMemo(() => {
     let list = [...items];
@@ -808,6 +842,7 @@ export default function Shop() {
                   {filtered.map(item => (
                     <ProductCard key={item._id} item={item} view={view}
                       wished={wished.includes(item._id)} onWish={toggleWish}
+                      compared={compared.includes(item._id)} onCompare={toggleComp}
                       deal={deal} getDealPrice={getDealPrice} isDealActive={isDealActive} />
                   ))}
                 </motion.div>

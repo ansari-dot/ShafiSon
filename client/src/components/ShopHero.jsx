@@ -35,7 +35,7 @@ export default function ShopHero() {
             {[
               { value: "200+", label: "Products" },
               { value: "12+", label: "Collections" },
-              { value: "Since 1972", label: "Trusted Craft" },
+              { value: "Since 1975", label: "Trusted Craft" },
             ].map((s) => (
               <div className="shop-hero-stat" key={s.label}>
                 <strong>{s.value}</strong>

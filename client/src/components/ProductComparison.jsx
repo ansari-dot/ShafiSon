@@ -1,12 +1,19 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
+import { hasInCompare, toggleCompare } from "../compare";
 
 const defaultSpecs = ["Material", "Dimensions", "Weight", "Warranty", "Assembly"];
 
 const CheckIcon = () => (
   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const CompareIcon = ({ active }) => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
   </svg>
 );
 
@@ -22,6 +29,33 @@ export default function ProductComparison({ initialSection = null, initialProduc
   const [active, setActive] = useState(0);
   const [section, setSection] = useState(initialSection);
   const [products, setProducts] = useState(() => (Array.isArray(initialProducts) ? initialProducts : []));
+  const [compared, setCompared] = useState([]);
+
+  useEffect(() => {
+    const updateCompared = () => {
+      setCompared(products.map(p => hasInCompare(p._id)));
+    };
+    updateCompared();
+    window.addEventListener("compare:updated", updateCompared);
+    return () => window.removeEventListener("compare:updated", updateCompared);
+  }, [products]);
+
+  const handleCompare = (product, index) => {
+    const success = toggleCompare({
+      id: product._id,
+      title: product.title,
+      img: product.img,
+      price: product.price,
+      priceUnit: product.priceUnit || 'per yard',
+      category: product.category,
+      material: product.material,
+      rating: product.rating,
+      reviews: product.reviews,
+    });
+    if (!success && !compared[index]) {
+      alert("You can compare up to 4 products at a time.");
+    }
+  };
 
   useEffect(() => {
     if (initialSection || (Array.isArray(initialProducts) && initialProducts.length)) return undefined;
@@ -92,14 +126,38 @@ export default function ProductComparison({ initialSection = null, initialProduc
             <thead>
               <tr>
                 <th className="cmp-th-label" />
-                {products.map((p) => (
+                {products.map((p, idx) => (
                   <th key={p._id} className="cmp-th-product">
                     <div className="cmp-product-img-wrap">
                       <img src={p.img} alt={p.title} className="cmp-product-img" />
                     </div>
                     <strong className="cmp-product-name">{p.title}</strong>
                     <span className="cmp-product-price">{formatPKR(p.price)}<span style={{fontSize: "11px", color: "#9ca3af", marginLeft: "4px"}}>{p.priceUnit || "per yard"}</span></span>
-                    <a href={`/shop/${p._id}`} className="cmp-add-btn">View</a>
+                    <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
+                      <button 
+                        onClick={() => handleCompare(p, idx)}
+                        className="cmp-compare-btn"
+                        style={{ 
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          border: "1.5px solid",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          background: compared[idx] ? "#3b82f6" : "transparent",
+                          color: compared[idx] ? "#fff" : "#3b82f6",
+                          borderColor: "#3b82f6",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        <CompareIcon active={compared[idx]} />
+                        {compared[idx] ? "Added" : "Compare"}
+                      </button>
+                      <a href={`/shop/${p._id}`} className="cmp-add-btn">View</a>
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -144,7 +202,31 @@ export default function ProductComparison({ initialSection = null, initialProduc
               <div className="cmp-card-info">
                 <strong className="cmp-card-name">{products[active].title}</strong>
                 <span className="cmp-card-price">{formatPKR(products[active].price)}<span style={{fontSize: "11px", color: "#9ca3af", marginLeft: "4px"}}>{products[active].priceUnit || "per yard"}</span></span>
-                <a href={`/shop/${products[active]._id}`} className="cmp-add-btn cmp-add-btn-full">View</a>
+                <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                  <button 
+                    onClick={() => handleCompare(products[active], active)}
+                    style={{ 
+                      padding: "8px 16px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      border: "1.5px solid",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      background: compared[active] ? "#3b82f6" : "transparent",
+                      color: compared[active] ? "#fff" : "#3b82f6",
+                      borderColor: "#3b82f6",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      flex: 1
+                    }}
+                  >
+                    <CompareIcon active={compared[active]} />
+                    {compared[active] ? "Added" : "Compare"}
+                  </button>
+                  <a href={`/shop/${products[active]._id}`} className="cmp-add-btn cmp-add-btn-full" style={{ flex: 1 }}>View</a>
+                </div>
               </div>
             </div>
             <div className="cmp-card-specs">

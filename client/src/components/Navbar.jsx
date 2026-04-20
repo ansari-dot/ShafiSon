@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { navLinks } from "../data/siteData";
 import { getCartCount } from "../util/cart";
 import { getWishlistCount } from "../wishlist";
+import { getCompareCount } from "../compare";
 import { apiGet } from "../util/api";
 import logo from "../assets/logo.png";
 
@@ -27,6 +28,11 @@ const CartIcon = () => (
   <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+  </svg>
+);
+const CompareIcon = () => (
+  <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
   </svg>
 );
 const MenuIcon = () => (
@@ -55,6 +61,7 @@ export default function Navbar() {
   const [searchVal, setSearchVal] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [compareCount, setCompareCount] = useState(0);
   const [megaOpen, setMegaOpen] = useState(false);
   const [megaNav, setMegaNav] = useState({ categories: [], materials: [] });
   const [megaCategoryDocs, setMegaCategoryDocs] = useState([]);
@@ -124,14 +131,17 @@ export default function Navbar() {
     const update = () => {
       setCartCount(getCartCount());
       setWishlistCount(getWishlistCount());
+      setCompareCount(getCompareCount());
     };
     update();
     window.addEventListener("cart:updated", update);
     window.addEventListener("wishlist:updated", update);
+    window.addEventListener("compare:updated", update);
     window.addEventListener("storage", update);
     return () => {
       window.removeEventListener("cart:updated", update);
       window.removeEventListener("wishlist:updated", update);
+      window.removeEventListener("compare:updated", update);
       window.removeEventListener("storage", update);
     };
   }, []);
@@ -214,6 +224,10 @@ export default function Navbar() {
             <div className="nb-actions">
               <Link to="/track" className="nb-icon-btn" aria-label="Track Order">
                 <TrackIcon />
+              </Link>
+              <Link to="/compare" className="nb-icon-btn nb-cart-btn" aria-label="Compare">
+                <CompareIcon />
+                {compareCount > 0 && <span className="nb-cart-badge">{compareCount}</span>}
               </Link>
               <Link to="/wishlist" className="nb-icon-btn nb-cart-btn" aria-label="Wishlist">
                 <HeartIcon />

@@ -4,6 +4,7 @@ import { apiGet } from "../util/api";
 import { formatPKR } from "../util/formatCurrency";
 import { addToCart } from "../util/cart";
 import { hasInWishlist, toggleWishlist } from "../wishlist";
+import { hasInCompare, toggleCompare } from "../compare";
 import { getQuantity, isLowStock, isOutOfStock } from "../util/stock";
 import usePageMeta from "../util/usePageMeta";
 import ProductReviews from "../components/ProductReviews";
@@ -28,6 +29,11 @@ const HeartIcon = ({ active }) => (
 const ShareIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
+  </svg>
+);
+const CompareIcon = ({ active }) => (
+  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke={active ? "#3b82f6" : "currentColor"} strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4" />
   </svg>
 );
 const ShieldIcon = () => (
@@ -148,7 +154,7 @@ function AccordionItem({ title, children }) {
   );
 }
 
-function HoverProductActions({ item, wished, onWish, onAdd }) {
+function HoverProductActions({ item, wished, compared, onWish, onCompare, onAdd }) {
   return (
     <>
       <div className="pd-card-actions">
@@ -164,6 +170,19 @@ function HoverProductActions({ item, wished, onWish, onAdd }) {
           style={{ color: wished ? "#ef4444" : undefined }}
         >
           <HeartIcon active={wished} />
+        </button>
+        <button
+          type="button"
+          className="pd-card-action-btn"
+          aria-label="Compare"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCompare(item);
+          }}
+          style={{ color: compared ? "#3b82f6" : undefined }}
+        >
+          <CompareIcon active={compared} />
         </button>
         <Link
           to={`/shop/${item._id}`}
@@ -213,6 +232,7 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState(null);
   const [qty, setQty] = useState(1);
   const [wished, setWished] = useState(false);
+  const [compared, setCompared] = useState(false);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
@@ -241,6 +261,7 @@ export default function ProductDetail() {
         if (!active) return;
         setProduct(p);
         setWished(hasInWishlist(p?._id));
+        setCompared(hasInCompare(p?._id));
         const productList = Array.isArray(list) ? list : Array.isArray(list?.products) ? list.products : [];
         setAllProducts(productList);
         setDeal(dealDoc || null);
@@ -272,6 +293,25 @@ export default function ProductDetail() {
     setWished(activeWish);
   };
 
+  const handleToggleCompare = () => {
+    if (!product) return;
+    const success = toggleCompare({
+      id: product._id,
+      title: product.title,
+      img: product.img,
+      price: product.price,
+      priceUnit: product.priceUnit || 'per yard',
+      category: product.category,
+      material: product.material,
+      rating: reviewStats.averageRating,
+      reviews: reviewStats.totalReviews,
+    });
+    if (!success && !compared) {
+      alert("You can compare up to 4 products at a time.");
+    }
+    setCompared(hasInCompare(product._id));
+  };
+
   const handleCardWishlist = (item) => {
     toggleWishlist({
       id: item._id,
@@ -281,6 +321,23 @@ export default function ProductDetail() {
       priceUnit: item.priceUnit || "per yard",
       category: item.category,
     });
+  };
+
+  const handleCardCompare = (item) => {
+    const success = toggleCompare({
+      id: item._id,
+      title: item.title,
+      img: item.img,
+      price: item.price,
+      priceUnit: item.priceUnit || "per yard",
+      category: item.category,
+      material: item.material,
+      rating: item.rating,
+      reviews: item.reviews,
+    });
+    if (!success && !hasInCompare(item._id)) {
+      alert("You can compare up to 4 products at a time.");
+    }
   };
 
   const handleCardAddToCart = (item) => {
@@ -566,6 +623,9 @@ export default function ProductDetail() {
               <button className={`pd-wish-btn ${wished ? "active" : ""}`} onClick={handleToggleWishlist} aria-label="Wishlist">
                 <HeartIcon active={wished} />
               </button>
+              <button className={`pd-wish-btn ${compared ? "active" : ""}`} onClick={handleToggleCompare} aria-label="Compare" style={{ color: compared ? "#3b82f6" : undefined }}>
+                <CompareIcon active={compared} />
+              </button>
               <button className="pd-share-btn" aria-label="Share"><ShareIcon /></button>
             </div>
 
@@ -573,7 +633,7 @@ export default function ProductDetail() {
             <div className="pd-trust">
               <div className="pd-trust-item">
                 <TruckIcon />
-                <span>Free shipping over {formatPKR(99)}</span>
+                <span>Free shipping over {formatPKR(10000)}</span>
               </div>
               <div className="pd-trust-item">
                 <ReturnIcon />
@@ -653,7 +713,9 @@ export default function ProductDetail() {
                     <HoverProductActions
                       item={item}
                       wished={hasInWishlist(item._id)}
+                      compared={hasInCompare(item._id)}
                       onWish={handleCardWishlist}
+                      onCompare={handleCardCompare}
                       onAdd={handleCardAddToCart}
                     />
                   </div>
@@ -685,7 +747,9 @@ export default function ProductDetail() {
                     <HoverProductActions
                       item={item}
                       wished={hasInWishlist(item._id)}
+                      compared={hasInCompare(item._id)}
                       onWish={handleCardWishlist}
+                      onCompare={handleCardCompare}
                       onAdd={handleCardAddToCart}
                     />
                   </div>

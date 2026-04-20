@@ -32,7 +32,7 @@ export default function Newsletter() {
           <div className="row align-items-center g-4">
             <div className="col-lg-6">
               <span className="section-label">Newsletter</span>
-              <h2 className="fs-2 fw-bold text-dark mt-2 mb-2">
+              <h2 className="fs-2 fw-bold mt-2 mb-2">
                 Get Inspired. Stay Updated.
               </h2>
               <p className="mb-0">

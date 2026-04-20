@@ -193,7 +193,7 @@ export default function About() {
               <div className="au-story-img-wrap">
                 <img src={aboutSofa} alt="Our story" className="img-fluid rounded-4 au-story-img" loading="lazy" />
                 <div className="au-story-badge">
-                  <span className="au-story-badge-year">45+</span>
+                  <span className="au-story-badge-year">50+</span>
                   <span className="au-story-badge-text">Years of<br />Excellence</span>
                 </div>
               </div>
