@@ -20,8 +20,5 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600,
-    cssCodeSplit: true,
-    minify: 'terser',
-    target: 'es2015',
   },
 })
