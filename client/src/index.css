@@ -10078,34 +10078,24 @@ body.sp-drawer-open {
     position: relative;
     overflow: hidden;
     width: 100%;
-    height: 750px;
-}
-
-@media (min-width: 1400px) {
-    .hero-with-banner {
-        height: 850px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .hero-with-banner {
-        height: 600px;
-    }
+    aspect-ratio: 16 / 9;
+    min-height: 420px;
+    max-height: 1080px;
 }
 
 @media (max-width: 768px) {
     .hero-with-banner {
-        height: 56vw;
-        min-height: 320px;
+        aspect-ratio: 16 / 9;
+        min-height: 220px;
         max-height: 480px;
     }
 }
 
 @media (max-width: 520px) {
     .hero-with-banner {
-        height: 60vw;
-        min-height: 260px;
-        max-height: 380px;
+        aspect-ratio: 16 / 9;
+        min-height: 180px;
+        max-height: 360px;
     }
 }
 
