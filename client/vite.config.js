@@ -21,7 +21,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 600,
     cssCodeSplit: true,
-    minify: 'esbuild',
+    minify: 'terser',
     target: 'es2015',
   },
 })
