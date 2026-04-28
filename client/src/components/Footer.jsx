@@ -186,8 +186,12 @@ export default function Footer() {
             <h4 className="footer-head">Store Hours</h4>
             <ul className="list-unstyled footer-links" style={{ fontSize: 13 }}>
               <li style={{ marginBottom: 6 }}>
-                <span style={{ fontWeight: 600, color: "var(--dark)", display: "block" }}>Mon – Fri</span>
+                <span style={{ fontWeight: 600, color: "var(--dark)", display: "block" }}>Mon – Thu</span>
                 9:00 am – 6:00 pm
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                <span style={{ fontWeight: 600, color: "#ef4444", display: "block" }}>Friday</span>
+                <span style={{ color: "#ef4444" }}>Closed</span>
               </li>
               <li style={{ marginBottom: 6 }}>
                 <span style={{ fontWeight: 600, color: "var(--dark)", display: "block" }}>Saturday</span>
@@ -195,7 +199,7 @@ export default function Footer() {
               </li>
               <li>
                 <span style={{ fontWeight: 600, color: "var(--dark)", display: "block" }}>Sunday</span>
-                Closed
+                10:00 am – 4:00 pm
               </li>
             </ul>
             <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(46,13,16,0.05)", borderLeft: "3px solid var(--brand)", fontSize: 12, lineHeight: 1.6 }}>
