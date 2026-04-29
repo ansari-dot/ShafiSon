@@ -125,17 +125,17 @@ export default function Footer() {
             {/* Social */}
             <ul className="list-unstyled d-flex gap-2 mb-0 footer-social">
               <li>
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
+                <a href="https://www.facebook.com/share/r/1CExyvduaS/" target="_blank" rel="noreferrer" aria-label="Facebook">
                   <FacebookIcon />
                 </a>
               </li>
               <li>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
+                <a href="https://www.instagram.com/shafisons?igsh=aHF5YXE0aDgwcmlh" target="_blank" rel="noreferrer" aria-label="Instagram">
                   <InstagramIcon />
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/92811234567" target="_blank" rel="noreferrer" aria-label="WhatsApp">
+                <a href="https://wa.me/923009385000" target="_blank" rel="noreferrer" aria-label="WhatsApp">
                   <WhatsAppIcon />
                 </a>
               </li>
