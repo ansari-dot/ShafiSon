@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame, Users } from 'lucide-react';
+import { Edit3, X, Save, Search, Scale, Sparkles, Layers, Flame, Users, Instagram, Plus } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/src/lib/api';
 
 type Product = {
@@ -81,6 +81,14 @@ type HeroBanner = {
   heroImages: string[];
 };
 
+type InstagramPost = {
+  _id?: string;
+  image: string;
+  title: string;
+  href: string;
+  order: number;
+};
+
 type CategorySection = {
   _id?: string;
   title: string;
@@ -102,6 +110,9 @@ export default function Content() {
   const [openTeam, setOpenTeam] = useState(false);
   const [openCatSections, setOpenCatSections] = useState(false);
   const [openEditCatSection, setOpenEditCatSection] = useState(false);
+  const [openInstagram, setOpenInstagram] = useState(false);
+  const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>([]);
+  const [instagramSaving, setInstagramSaving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
@@ -190,6 +201,16 @@ export default function Content() {
       { name: 'Kathryn Ryan', role: 'CEO, Founder, Atty.', img: '/images/person_4.jpg', active: true },
     ],
   });
+
+  const loadInstagramPosts = () =>
+    fetch(`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')}/api/instagram-posts`, { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => setInstagramPosts(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+  useEffect(() => {
+    loadInstagramPosts();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -586,6 +607,73 @@ export default function Content() {
     }));
   };
 
+  const compressInstagramImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const source = typeof reader.result === 'string' ? reader.result : '';
+        if (!source) return reject(new Error('Invalid image'));
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1200 / img.width, 1200 / img.height, 1);
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Canvas error'));
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = source;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+  const addInstagramPost = () =>
+    setInstagramPosts((prev) => [...prev, { image: '', title: '', href: '', order: prev.length }]);
+
+  const updateInstagramPost = (index: number, patch: Partial<InstagramPost>) =>
+    setInstagramPosts((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+
+  const removeInstagramPost = (index: number) =>
+    setInstagramPosts((prev) => prev.filter((_, i) => i !== index));
+
+  const handleInstagramImageUpload = async (index: number, file?: File | null) => {
+    if (!file) return;
+    try {
+      const compressed = await compressInstagramImage(file);
+      updateInstagramPost(index, { image: compressed });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process image');
+    }
+  };
+
+  const saveInstagramPosts = async () => {
+    setInstagramSaving(true);
+    setError('');
+    try {
+      // 1. Delete ALL existing posts from DB
+      const existing = await apiGet<InstagramPost[]>('/api/instagram-posts');
+      for (const p of (existing || [])) {
+        if (p._id) await apiDelete(`/api/instagram-posts/${p._id}`);
+      }
+      // 2. Re-create all current posts in order
+      for (let i = 0; i < instagramPosts.length; i++) {
+        const p = instagramPosts[i];
+        if (p.image) await apiPost('/api/instagram-posts', { image: p.image, title: p.title, href: p.href, order: i });
+      }
+      await loadInstagramPosts();
+      setOpenInstagram(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setInstagramSaving(false);
+    }
+  };
+
   const compressImageFile = (file: File, maxW = 1600, maxH = 900, quality = 0.82): Promise<string> => (
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -718,6 +806,17 @@ export default function Content() {
 
       <div className="mb-6 bg-white border border-black/10 rounded-lg shadow-sm p-5 flex items-center justify-between">
         <div>
+          <h2 className="font-bold text-slate-900">Homepage: Instagram Photos</h2>
+          <p className="text-sm text-slate-500">Manage photos shown in the Instagram section on the home page.</p>
+        </div>
+        <button onClick={() => setOpenInstagram(true)} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-2 font-medium shadow-sm hover:bg-blue-700 transition-colors">
+          <Instagram size={16} />
+          Edit Instagram
+        </button>
+      </div>
+
+      <div className="mb-6 bg-white border border-black/10 rounded-lg shadow-sm p-5 flex items-center justify-between">
+        <div>
           <h2 className="font-bold text-slate-900">About Page: Team Section</h2>
           <p className="text-sm text-slate-500">Manage team members shown in the About page.</p>
         </div>
@@ -760,6 +859,77 @@ export default function Content() {
           ))}
         </div>
       </div>
+
+      {openInstagram && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+              <h3 className="text-lg font-bold text-slate-900">Edit Instagram Photos</h3>
+              <button onClick={() => setOpenInstagram(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500">Upload photos and add Instagram post links. First photo will be displayed as the large hero tile.</p>
+                <button type="button" onClick={addInstagramPost} className="bg-blue-600 text-white px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium hover:bg-blue-700">
+                  <Plus size={14} /> Add Photo
+                </button>
+              </div>
+
+              {instagramPosts.length === 0 && (
+                <div className="text-center py-10 text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                  No photos yet. Click "Add Photo" to get started.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {instagramPosts.map((post, i) => (
+                  <div key={i} className="border border-slate-200 rounded-lg p-3 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-500">Photo {i + 1}{i === 0 ? ' (Hero tile)' : ''}</span>
+                      <button type="button" onClick={() => removeInstagramPost(i)} className="text-red-500 hover:text-red-700"><X size={14} /></button>
+                    </div>
+
+                    {post.image && (
+                      <img src={post.image} alt={`Post ${i + 1}`} className="w-full h-32 object-cover rounded border border-slate-200" />
+                    )}
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full rounded border border-slate-200 px-2 py-1.5 text-xs"
+                      onChange={(e) => handleInstagramImageUpload(i, e.target.files?.[0])}
+                    />
+
+                    <input
+                      className="w-full rounded border border-slate-200 px-3 py-2 text-sm"
+                      placeholder="Caption / Title"
+                      value={post.title}
+                      onChange={(e) => updateInstagramPost(i, { title: e.target.value })}
+                    />
+
+                    <input
+                      className="w-full rounded border border-slate-200 px-3 py-2 text-sm"
+                      placeholder="Instagram post URL (https://www.instagram.com/p/...)"
+                      value={post.href}
+                      onChange={(e) => updateInstagramPost(i, { href: e.target.value })}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {error && <div className="text-sm text-red-600">{error}</div>}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setOpenInstagram(false)} className="px-4 py-2 text-sm rounded-md border border-slate-200 text-slate-600">Cancel</button>
+                <button type="button" disabled={instagramSaving} onClick={saveInstagramPosts} className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white flex items-center gap-2">
+                  <Save size={16} />
+                  {instagramSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {openHero && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
