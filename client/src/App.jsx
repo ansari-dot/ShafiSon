@@ -16,8 +16,6 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Compare = lazy(() => import("./pages/Compare"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Thankyou = lazy(() => import("./pages/Thankyou"));
-const AdminProducts = lazy(() => import("./pages/AdminProducts"));
-const AdminCategories = lazy(() => import("./pages/AdminCategories"));
 const AdminInstagram = lazy(() => import("./pages/AdminInstagram"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const PaymentConfirmation = lazy(() => import("./pages/PaymentConfirmation"));
@@ -44,9 +42,6 @@ function App() {
           <Route path="/payment-confirmation" element={<PaymentConfirmation />} />
           <Route path="/thankyou" element={<Thankyou />} />
           <Route path="/track" element={<TrackOrder />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/instagram" element={<AdminInstagram />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
