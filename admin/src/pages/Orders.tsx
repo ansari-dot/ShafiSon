@@ -275,10 +275,17 @@ export default function Orders() {
                 <div className="px-4 py-3 border-b border-slate-100 font-semibold text-slate-900">Items</div>
                 <div className="divide-y divide-slate-100">
                   {(selected.items || []).map((item: any, idx: number) => {
-                    const unitLabel = String(item.priceUnit || 'per yard').replace(/^per\s+/i, '');
+                    const unitLabel = String(item.priceUnit || 'per yard');
                     return (
-                      <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
-                        <div>
+                      <div key={idx} className="px-4 py-3 flex items-center gap-3 text-sm">
+                        {item.img && (
+                          <img
+                            src={item.img}
+                            alt={item.title}
+                            className="w-16 h-16 object-cover rounded-md border border-slate-200 shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
                           <div className="font-semibold text-slate-900">{item.title}</div>
                           {item.sku && <div className="text-[11px] font-mono text-slate-400">SKU: {item.sku}</div>}
                           {item.subcategorySerial && <div className="text-[11px] font-mono text-slate-400">Sub-cat #: {item.subcategorySerial}</div>}
@@ -286,19 +293,14 @@ export default function Orders() {
                           {(item.color || item.size) && (
                             <div className="flex items-center gap-2 mt-0.5">
                               {item.color && (
-                                <span className="flex items-center gap-1 text-slate-500">
-                                  {item.colorHex && (
-                                    <span style={{ width:10, height:10, borderRadius:'50%', background:item.colorHex, border:'1px solid #cbd5e1', display:'inline-block', flexShrink:0 }} />
-                                  )}
-                                  {item.color}
-                                </span>
+                                <span className="text-slate-500">Pattern: {item.color}</span>
                               )}
                               {item.color && item.size && <span className="text-slate-300">·</span>}
                               {item.size && <span className="text-slate-500">Size: {item.size}</span>}
                             </div>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <div className="text-slate-900 font-semibold">{formatPKR(item.unitPrice || 0)}</div>
                           {item.originalPrice > item.unitPrice && (
                             <div className="text-slate-400 line-through">{formatPKR(item.originalPrice)}</div>

@@ -12,6 +12,7 @@ const orderItemSchema = new mongoose.Schema(
     size: { type: String, default: '' },
     color: { type: String, default: '' },
     colorHex: { type: String, default: '' },
+    img: { type: String, default: '' },
     sku: { type: String, default: '' },
     subcategorySerial: { type: String, default: '' },
   },

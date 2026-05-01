@@ -90,7 +90,6 @@ export default function Wishlist() {
                     <span className="wl-price-unit">{item.priceUnit || 'per yard'}</span>
                   </div>
                   <div className="wl-actions">
-                    {outOfStock && <span className="wl-stock-badge wl-stock-badge-out">Out of Stock</span>}
                     {lowStock && <span className="wl-stock-badge wl-stock-badge-low">Low Stock ({qty} left)</span>}
                     <button className={`wl-btn wl-btn-primary ${outOfStock ? "disabled" : ""}`} onClick={() => moveToCart(item)} disabled={outOfStock}>{outOfStock ? "Out of Stock" : "Move to Cart"}</button>
                     <button className="wl-btn" onClick={() => removeFromWishlist(item.id)}>Remove</button>

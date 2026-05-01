@@ -377,13 +377,11 @@ export default function ProductDetail() {
   }
 
   const images = product.img ? [product.img] : [];
-  const colorImages = (product.colors || []).filter(c => c.image).map(c => c.image);
-  // gallery = main img + all color images
-  const gallery = [...new Set([...images, ...colorImages])];
-  const activeColor = selectedColor !== null ? product.colors?.[selectedColor] : null;
-  // when a color is selected, put its image first
-  const displayImages = activeColor?.image
-    ? [activeColor.image, ...gallery.filter(img => img !== activeColor.image)]
+  const patternImages = (product.colors || []).filter(c => c.image).map(c => c.image);
+  const gallery = [...new Set([...images, ...patternImages])];
+  const activePattern = selectedColor !== null ? product.colors?.[selectedColor] : null;
+  const displayImages = activePattern?.image
+    ? [activePattern.image, ...gallery.filter(img => img !== activePattern.image)]
     : gallery;
   const related = allProducts.filter(p => p.category === product.category && p._id !== product._id).slice(0, 4);
   const browseMore = allProducts.filter((p) => p._id !== product._id).slice(0, 3);
@@ -416,20 +414,19 @@ export default function ProductDetail() {
     setAdded(true);
     const unitPrice = dealActive ? dealPrice : product.price;
     const selectedSizeName = selectedSize !== null ? (product.sizes || [])[selectedSize] || '' : '';
-    const selectedColorName = activeColor ? activeColor.name : '';
     // find subcategory serial from allProducts categories (passed via product data)
     const subcategorySerial = product.subcategorySerial || '';
     addToCart({
       id: product._id,
       title: product.title,
-      img: activeColor?.image || product.img,
+      img: activePattern?.image || product.img,
       unitPrice: Number(unitPrice || 0),
       originalPrice: Number(product.price || 0),
       priceUnit: product.priceUnit || 'per yard',
       isDeal: !!product.isDeal,
       size: selectedSizeName,
-      color: selectedColorName,
-      colorHex: activeColor?.hex || '',
+      color: activePattern ? activePattern.name : '',
+      colorHex: activePattern?.hex || '',
       sku: product.sku || '',
       subcategorySerial,
     }, qty);
@@ -515,19 +512,21 @@ export default function ProductDetail() {
               <span className="pd-cat-label">{product.category}</span>
               {outOfStock && <span className="pd-out-badge">Out of Stock</span>}
               {lowStock && <span className="pd-low-badge">Low Stock ({stockQty} left)</span>}
-              {product.color && <span className="pd-color-text">Color: {activeColor ? activeColor.name : product.color}</span>}
+              {product.colors && product.colors.length > 0 && <span className="pd-color-text">Pattern: {activePattern ? activePattern.name : ""}</span>}
               {dealActive && <span className="pd-deal-badge">Deal</span>}
             </div>
 
             <h1 className="pd-title">{product.title}</h1>
 
             {/* Rating */}
+            {reviewStats.totalReviews > 0 && (
             <div className="pd-rating-row">
               <Stars rating={reviewStats.averageRating} />
               <span className="pd-rating-num">{reviewStats.averageRating.toFixed(1)}</span>
               <span className="pd-rating-sep">·</span>
               <span className="pd-review-count">{reviewStats.totalReviews} reviews</span>
             </div>
+            )}
 
             {/* Price */}
             <div className="pd-price-row">
@@ -552,32 +551,76 @@ export default function ProductDetail() {
             <div className="pd-divider" />
 
 
-            {/* Color Variants */}
+            {/* Color / Pattern Variants */}
             {product.colors && product.colors.length > 0 && (
               <div className="pd-option-group">
-                <label className="pd-option-label">Color</label>
-                <div className="pd-color-swatches">
-                  {product.colors.map((c, i) => (
-                    <div key={i} className="pd-color-swatch-wrap">
+                <label className="pd-option-label">
+                  {"Pattern"}
+                  {activePattern && <span className="pd-option-val"> — {activePattern.name}</span>}
+                </label>
+
+                {/* If patterns have images — show as image swatches */}
+                {product.colors.some(c => c.image) ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
+                    {product.colors.map((c, i) => (
                       <button
-                        className={`pd-color-swatch ${selectedColor === i ? "active" : ""}`}
-                        onClick={() => {
-                          setSelectedColor(i);
-                          setActiveImg(0);
-                        }}
+                        key={i}
+                        onClick={() => { setSelectedColor(i); setActiveImg(0); }}
                         title={c.name}
+                        style={{
+                          padding: 0,
+                          border: selectedColor === i ? "3px solid #2e0d10" : "2px solid #e5e7eb",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          background: "none",
+                          outline: "none",
+                          overflow: "hidden",
+                          width: 72,
+                          flexShrink: 0,
+                          boxShadow: selectedColor === i ? "0 0 0 2px #2e0d1040" : "none",
+                          transition: "border 0.15s, box-shadow 0.15s",
+                        }}
                       >
-                        {c.hex
-                          ? <span className="pd-color-swatch-hex" style={{ background: c.hex }} />
-                          : c.image
-                            ? <img src={c.image} alt={c.name} className="pd-color-swatch-img" />
-                            : <span className="pd-color-swatch-label">{c.name}</span>
-                        }
+                        <img
+                          src={c.image}
+                          alt={c.name}
+                          style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }}
+                        />
+                        <span style={{
+                          display: "block",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: selectedColor === i ? "#2e0d10" : "#6b7280",
+                          padding: "4px 2px",
+                          textAlign: "center",
+                          lineHeight: 1.2,
+                          background: selectedColor === i ? "#fdf6f0" : "#fff",
+                        }}>
+                          {c.name}
+                        </span>
                       </button>
-                      {c.name && <span className="pd-color-swatch-name">{c.name}</span>}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Fallback: hex color swatches */
+                  <div className="pd-color-swatches">
+                    {product.colors.map((c, i) => (
+                      <div key={i} className="pd-color-swatch-wrap">
+                        <button
+                          className={`pd-color-swatch ${selectedColor === i ? "active" : ""}`}
+                          onClick={() => { setSelectedColor(i); setActiveImg(0); }}
+                          title={c.name}
+                        >
+                          {c.hex
+                            ? <span className="pd-color-swatch-hex" style={{ background: c.hex }} />
+                            : <span className="pd-color-swatch-label">{c.name}</span>
+                          }
+                        </button>
+                        {c.name && <span className="pd-color-swatch-name">{c.name}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -585,7 +628,7 @@ export default function ProductDetail() {
             {product.sizes && product.sizes.filter(s => !/custom.?length/i.test(s)).length > 0 && (
               <div className="pd-option-group">
                 <label className="pd-option-label">
-                  Size
+                  {product.category?.toLowerCase().includes("curtain") ? "Select Size" : "Size"}
                   {selectedSize !== null && (
                     <span className="pd-option-val"> — {product.sizes[selectedSize]}</span>
                   )}
@@ -723,7 +766,11 @@ export default function ProductDetail() {
                     <span className="pd-cat-label">{item.category}</span>
                     <h4 className="pd-related-title">{item.title}</h4>
                     <div className="pd-related-bottom">
-                      <Stars rating={item.rating || 0} />
+                      {(item.averageRating || item.rating || 0) > 0 ? (
+                        <Stars rating={item.averageRating || item.rating || 0} />
+                      ) : (
+                        <span style={{ fontSize: 12, color: "#9ca3af" }}>No reviews yet</span>
+                      )}
                       <strong className="pd-related-price">{formatPKR(item.price)}</strong>
                     </div>
                   </div>

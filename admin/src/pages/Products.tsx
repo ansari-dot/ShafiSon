@@ -11,7 +11,7 @@ type Category = {
   subcategories?: { name: string; serialNumber: string }[];
 };
 
-type ColorVariant = { name: string; image: string; hex: string };
+type PatternVariant = { name: string; image: string; hex: string };
 
 type Product = {
   _id: string;
@@ -31,7 +31,7 @@ type Product = {
   badge?: string | null;
   sizes?: string[];
   imgs?: string[];
-  colors?: ColorVariant[];
+  colors?: PatternVariant[];
   description?: string;
   specs?: {
     Dimensions?: string;
@@ -51,8 +51,6 @@ const emptyForm = {
   subcategory: '',
   material: '',
   img: '',
-  rating: '',
-  reviews: '',
   badge: '',
   sizes: '',
   description: '',
@@ -64,7 +62,7 @@ const emptyForm = {
   inStock: true,
 };
 
-const emptyColor: ColorVariant = { name: '', image: '', hex: '#000000' };
+const emptyPattern: PatternVariant = { name: '', image: '', hex: '' };
 
 type FormState = typeof emptyForm;
 
@@ -79,7 +77,7 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [colorVariants, setColorVariants] = useState<ColorVariant[]>([]);
+  const [patternVariants, setPatternVariants] = useState<PatternVariant[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -113,13 +111,13 @@ export default function Products() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
-    setColorVariants([]);
+    setPatternVariants([]);
     setOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p);
-    setColorVariants(p.colors && p.colors.length ? p.colors.map((c) => ({ name: c.name, image: c.image, hex: c.hex || '#000000' })) : []);
+    setPatternVariants(p.colors && p.colors.length ? p.colors.map((c) => ({ name: c.name, image: c.image, hex: c.hex || '' })) : []);
     setForm({
       title: p.title || '',
       price: String(p.price ?? ''),
@@ -129,8 +127,6 @@ export default function Products() {
       subcategory: p.subcategory || '',
       material: p.material || '',
       img: p.img || '',
-      rating: String(p.rating ?? ''),
-      reviews: String(p.reviews ?? ''),
       badge: p.badge || '',
       sizes: (p.sizes || []).join(', '),
       description: p.description || '',
@@ -147,24 +143,24 @@ export default function Products() {
   const closeModal = () => {
     setOpen(false);
     setSaving(false);
-    setColorVariants([]);
+    setPatternVariants([]);
   };
 
-  const addColorVariant = () => setColorVariants((prev) => [...prev, { ...emptyColor }]);
+  const addPatternVariant = () => setPatternVariants((prev) => [...prev, { ...emptyPattern }]);
 
-  const removeColorVariant = (i: number) =>
-    setColorVariants((prev) => prev.filter((_, idx) => idx !== i));
+  const removePatternVariant = (i: number) =>
+    setPatternVariants((prev) => prev.filter((_, idx) => idx !== i));
 
-  const updateColorVariant = (i: number, key: keyof ColorVariant, val: string) =>
-    setColorVariants((prev) => prev.map((c, idx) => (idx === i ? { ...c, [key]: val } : c)));
+  const updatePatternVariant = (i: number, key: keyof PatternVariant, val: string) =>
+    setPatternVariants((prev) => prev.map((c, idx) => (idx === i ? { ...c, [key]: val } : c)));
 
-  const handleColorImageUpload = async (i: number, file?: File | null) => {
+  const handlePatternImageUpload = async (i: number, file?: File | null) => {
     if (!file) return;
     try {
       const dataUrl = await compressImageFile(file);
-      updateColorVariant(i, 'image', dataUrl);
+      updatePatternVariant(i, 'image', dataUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process color image');
+      setError(err instanceof Error ? err.message : 'Failed to process pattern image');
     }
   };
 
@@ -227,10 +223,8 @@ export default function Products() {
       material: form.material.trim(),
       img: form.img.trim(),
       imgs: [],
-      rating: form.rating ? Number(form.rating) : 0,
-      reviews: form.reviews ? Number(form.reviews) : 0,
       badge: form.badge ? form.badge.trim() : null,
-      colors: colorVariants.filter((c) => c.name.trim()),
+      colors: patternVariants.filter((c) => c.name.trim()),
       sizes: form.sizes ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean) : [],
       description: form.description.trim(),
       specs: {
@@ -444,14 +438,6 @@ export default function Products() {
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.badge} onChange={(e) => onChange('badge', e.target.value)} placeholder="New, Sale, Popular" />
               </div>
               <div className="col-span-1">
-                <label className="text-xs font-semibold text-slate-500">Rating</label>
-                <input type="number" step="0.1" className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.rating} onChange={(e) => onChange('rating', e.target.value)} />
-              </div>
-              <div className="col-span-1">
-                <label className="text-xs font-semibold text-slate-500">Reviews</label>
-                <input type="number" className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.reviews} onChange={(e) => onChange('reviews', e.target.value)} />
-              </div>
-              <div className="col-span-1">
                 <label className="text-xs font-semibold text-slate-500">Sizes (comma separated)</label>
                 <input className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" value={form.sizes} onChange={(e) => onChange('sizes', e.target.value)} />
               </div>
@@ -485,43 +471,30 @@ export default function Products() {
                 </div>
               </div>
 
-              {/* Color Variants */}
+              {/* Patterns */}
               <div className="col-span-2">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-slate-500">Color Variants</label>
-                  <button type="button" onClick={addColorVariant} className="text-xs text-blue-600 hover:underline">+ Add Color</button>
+                  <label className="text-xs font-semibold text-slate-500">Patterns</label>
+                  <button type="button" onClick={addPatternVariant} className="text-xs text-blue-600 hover:underline">+ Add Pattern</button>
                 </div>
-                {colorVariants.map((cv, i) => (
+                {patternVariants.map((cv, i) => (
                   <div key={i} className="flex items-center gap-2 mb-2 p-2 border border-slate-200 rounded-md">
                     <input
-                      type="color"
-                      value={cv.hex || '#000000'}
-                      onChange={(e) => updateColorVariant(i, 'hex', e.target.value)}
-                      className="w-9 h-9 rounded cursor-pointer border border-slate-200 p-0.5"
-                      title="Pick color"
-                    />
-                    <input
-                      className="w-24 rounded-md border border-slate-200 px-2 py-1 text-sm font-mono"
-                      placeholder="#000000"
-                      value={cv.hex || ''}
-                      onChange={(e) => updateColorVariant(i, 'hex', e.target.value)}
-                    />
-                    <input
-                      className="w-28 rounded-md border border-slate-200 px-2 py-1 text-sm"
-                      placeholder="Color name"
+                      className="w-36 rounded-md border border-slate-200 px-2 py-1 text-sm"
+                      placeholder="Pattern name"
                       value={cv.name}
-                      onChange={(e) => updateColorVariant(i, 'name', e.target.value)}
+                      onChange={(e) => updatePatternVariant(i, 'name', e.target.value)}
                     />
                     {cv.image && (
-                      <img src={cv.image} alt={cv.name} className="w-9 h-9 rounded object-cover border border-slate-200 shrink-0" />
+                      <img src={cv.image} alt={cv.name} className="w-12 h-12 rounded object-cover border border-slate-200 shrink-0" />
                     )}
                     <input
                       type="file"
                       accept="image/*"
                       className="flex-1 text-xs"
-                      onChange={(e) => handleColorImageUpload(i, e.target.files?.[0])}
+                      onChange={(e) => handlePatternImageUpload(i, e.target.files?.[0])}
                     />
-                    <button type="button" onClick={() => removeColorVariant(i)} className="text-red-500 hover:text-red-700 shrink-0">
+                    <button type="button" onClick={() => removePatternVariant(i)} className="text-red-500 hover:text-red-700 shrink-0">
                       <X size={14} />
                     </button>
                   </div>

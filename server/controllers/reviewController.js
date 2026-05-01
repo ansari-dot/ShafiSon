@@ -2,6 +2,7 @@ import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import mongoose from 'mongoose';
+import { invalidateCache } from '../middlewares/cache.js';
 
 // Add review (only for customers who bought the product)
 const addReview = async (req, res) => {
@@ -45,6 +46,10 @@ const addReview = async (req, res) => {
 
     // Update product average rating
     const updatedStats = await updateProductRating(productId);
+
+    // Invalidate product cache so shop page shows updated rating immediately
+    invalidateCache('/api/products');
+    invalidateCache('/api/home');
 
     res.status(201).json({ 
       message: 'Review added successfully', 

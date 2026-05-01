@@ -67,6 +67,7 @@ export default function Checkout() {
         cartItems: items.map((i) => ({
           productId: i.id,
           title: i.title,
+          img: i.img || '',
           qty: i.qty,
           unitPrice: i.unitPrice,
           priceUnit: i.priceUnit || 'per yard',

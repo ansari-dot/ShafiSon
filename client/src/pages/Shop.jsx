@@ -180,9 +180,15 @@ function ProductCard({ item, view, wished, compared, onWish, onCompare, deal, ge
           <h3 className="sp-card-title">{item.title}</h3>
         </Link>
         <div className="sp-card-rating">
-          <Stars rating={item.rating || 0} />
-          <span className="sp-card-rating-num">{item.rating || 0}</span>
-          <span className="sp-card-reviews">({item.reviews || 0} reviews)</span>
+          {(item.averageRating || item.rating || 0) > 0 ? (
+            <>
+              <Stars rating={item.averageRating || item.rating || 0} />
+              <span className="sp-card-rating-num">{Number(item.averageRating || item.rating || 0).toFixed(1)}</span>
+              <span className="sp-card-reviews">({item.totalReviews || item.reviews || 0} reviews)</span>
+            </>
+          ) : (
+            <span className="sp-card-reviews" style={{ color: "#9ca3af", fontSize: 12 }}>No reviews yet</span>
+          )}
         </div>
         {isList && <p className="sp-card-desc">Handcrafted with premium {item.material?.toLowerCase() || "materials"} Ã¢â‚¬â€ built for comfort and lasting style.</p>}
         <div className="sp-card-footer">

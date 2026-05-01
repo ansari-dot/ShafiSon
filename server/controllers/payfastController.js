@@ -50,6 +50,7 @@ export async function initPayfast(req, res) {
       return {
         productId: prod?._id || c.productId,
         title: prod?.title || c.title || "Item",
+        img: c.img || '',
         qty: Number(c.qty || 1),
         unitPrice,
         originalPrice: Number(basePrice || 0),

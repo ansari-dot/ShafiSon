@@ -39,7 +39,13 @@ function normalizeProductDoc(product) {
   if (!product || typeof product !== "object") return product;
   const imgs = normalizeImageList(product.imgs);
   const img = String(product.img || "").trim() || imgs[0] || "";
-  return { ...product, img, imgs };
+  return {
+    ...product,
+    img,
+    imgs,
+    averageRating: product.averageRating ?? product.rating ?? 0,
+    totalReviews: product.totalReviews ?? product.reviews ?? 0,
+  };
 }
 
 export async function getProducts(req, res) {
@@ -154,6 +160,9 @@ export async function getProductById(req, res) {
 export async function createProduct(req, res) {
   try {
     const body = { ...req.body };
+    // rating and reviews are managed by the review system only
+    delete body.rating;
+    delete body.reviews;
     if (!body.sku || !String(body.sku).trim()) {
       body.sku = `SKU-${Date.now().toString(36).toUpperCase()}`;
     }
@@ -169,7 +178,11 @@ export async function updateProduct(req, res) {
   if (!isValidObjectId(id)) return res.status(400).json({ message: "Invalid id" });
 
   try {
-    const product = await Product.findByIdAndUpdate(id, req.body, {
+    const body = { ...req.body };
+    // rating and reviews are managed by the review system only
+    delete body.rating;
+    delete body.reviews;
+    const product = await Product.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     }).lean();
